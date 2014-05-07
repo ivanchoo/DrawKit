@@ -33,7 +33,7 @@
 
 - (void)setHotspots:(NSArray*)spots
 {
-    [m_customHotSpots release];
+    
     m_customHotSpots = [spots mutableCopy];
 
     [m_customHotSpots makeObjectsPerformSelector:@selector(setOwner:)
@@ -136,7 +136,6 @@
         [self setDelegate:delegate];
 
         if (m_owner == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -263,7 +262,6 @@
         m_delegate = [coder decodeObjectForKey:@"delegate"];
 
         if (m_owner == nil) {
-            [self autorelease];
             self = nil;
         }
     }

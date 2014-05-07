@@ -27,7 +27,7 @@
 {
     if (list != [self renderList]) {
         NSMutableArray* rl = [list mutableCopy];
-        [m_renderList release];
+        
         m_renderList = rl;
 
         // set the container ref for each item in the list - when unarchiving newer files this is already done but
@@ -130,7 +130,7 @@
     if (src >= [m_renderList count])
         src = [m_renderList count] - 1;
 
-    DKRasterizer* moving = [[m_renderList objectAtIndex:src] retain];
+    DKRasterizer* moving = [m_renderList objectAtIndex:src];
 
     [self removeObjectFromRenderListAtIndex:src];
 
@@ -139,7 +139,7 @@
 
     [self insertObject:moving
         inRenderListAtIndex:dest];
-    [moving release];
+    
 }
 
 /** @brief Inserts a renderer into the group at the given index
@@ -272,7 +272,7 @@
             }
         }
 
-        return [rl autorelease];
+        return rl;
     }
 
     return nil;
@@ -386,7 +386,7 @@
 
     [str appendString:@"}"];
 
-    return [str autorelease];
+    return str;
 }
 
 #pragma mark -
@@ -445,7 +445,7 @@
 
 - (void)dealloc
 {
-    [m_renderList release];
+    
     [super dealloc];
 }
 
@@ -456,7 +456,6 @@
         m_renderList = [[NSMutableArray alloc] init];
 
         if (m_renderList == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -592,7 +591,7 @@
 
     NSArray* rl = [[self renderList] deepCopy];
     [copy setRenderList:rl];
-    [rl release];
+    
 
     return copy;
 }

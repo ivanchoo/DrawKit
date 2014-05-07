@@ -58,10 +58,10 @@
 {
     LogEvent_(kReactiveEvent, @"storage setting %d objects %@", [objects count], self);
 
-    [objects retain];
-    [mObjects release];
+    
+    
     mObjects = [objects mutableCopy];
-    [objects release];
+    
 
     [mObjects makeObjectsPerformSelector:@selector(setStorage:)
                               withObject:self];
@@ -169,11 +169,11 @@
     NSUInteger old = [self indexOfObject:obj];
 
     if (old != indx) {
-        [obj retain];
+        
         [mObjects removeObject:obj];
         [mObjects insertObject:obj
                        atIndex:indx];
-        [obj release];
+        
     }
 }
 
@@ -237,7 +237,7 @@
 {
     [[self objects] makeObjectsPerformSelector:@selector(setStorage:)
                                     withObject:nil];
-    [mObjects release];
+    
     [super dealloc];
 }
 

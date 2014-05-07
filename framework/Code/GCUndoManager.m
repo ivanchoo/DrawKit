@@ -63,7 +63,7 @@
     }
 
     mOpenGroupRef = newGroup;
-    [newGroup release];
+    
 
     if (![self isUndoing] && mGroupLevel > 0)
         [self checkpoint];
@@ -266,8 +266,8 @@
 
 - (void)setRunLoopModes:(NSArray*)modes
 {
-    [modes retain];
-    [mRunLoopModes release];
+    
+    
     mRunLoopModes = modes;
 
     // n.b. if this is changed while a callback is pending, the new modes won't take effect until
@@ -354,7 +354,7 @@
     if ([self isUndoRegistrationEnabled]) {
         THROW_IF_FALSE(invocation != nil, @"-forwardInvocation: was passed an invalid nil invocation");
 
-        GCConcreteUndoTask* task = [[[GCConcreteUndoTask alloc] initWithInvocation:invocation] autorelease];
+        GCConcreteUndoTask* task = [[GCConcreteUndoTask alloc] initWithInvocation:invocation];
         [task setTarget:mNextTarget
                retained:[self retainsTargets]];
         [self submitUndoTask:task];
@@ -371,9 +371,9 @@
     if ([self isUndoRegistrationEnabled]) {
         THROW_IF_FALSE(selector != NULL, @"invalid (NULL) selector passed to registerUndoWithTarget:selector:object:");
 
-        GCConcreteUndoTask* task = [[[GCConcreteUndoTask alloc] initWithTarget:target
+        GCConcreteUndoTask* task = [[GCConcreteUndoTask alloc] initWithTarget:target
                                                                       selector:selector
-                                                                        object:anObject] autorelease];
+                                                                        object:anObject];
         [task setTarget:target
                retained:[self retainsTargets]];
         [self submitUndoTask:task];
@@ -421,7 +421,7 @@
             }
         }
 
-        [temp release];
+        
 
         temp = [[self redoStack] copy];
         iter = [temp objectEnumerator];
@@ -437,7 +437,7 @@
             }
         }
 
-        [temp release];
+        
 
         mIsRemovingTargets = NO;
     }
@@ -759,7 +759,7 @@
     // pops the top undo task and returns it, or nil if the stack is empty.
 
     if ([mUndoStack count] > 0) {
-        GCUndoGroup* group = [[[self peekUndo] retain] autorelease];
+        GCUndoGroup* group = [self peekUndo];
         [mUndoStack removeLastObject];
 
         return group;
@@ -772,7 +772,7 @@
     // pops the top redo task and returns it, or nil if the stack is empty.
 
     if ([mRedoStack count] > 0) {
-        GCUndoGroup* group = [[[self peekRedo] retain] autorelease];
+        GCUndoGroup* group = [self peekRedo];
         [mRedoStack removeLastObject];
 
         return group;
@@ -856,7 +856,7 @@
 #warning 64BIT: Check formatting arguments
             [newTaskGroup setActionName:[NSString stringWithFormat:@"%@ (%d: %@)", [topGroup actionName], ++suffix, selString]];
             [self pushGroupOntoUndoStack:newTaskGroup];
-            [newTaskGroup release];
+            
         }
     }
 }
@@ -872,7 +872,7 @@
         mRedoStack = [[NSMutableArray alloc] init];
 
         mGroupsByEvent = YES;
-        mRunLoopModes = [[NSArray arrayWithObject:NSDefaultRunLoopMode] retain];
+        mRunLoopModes = [NSArray arrayWithObject:NSDefaultRunLoopMode];
         mAutoDeleteEmptyGroups = YES;
         mCoalKind = kGCCoalesceLastTask;
 
@@ -888,10 +888,10 @@
 {
     [[NSRunLoop mainRunLoop] cancelPerformSelectorsWithTarget:self];
 
-    [mUndoStack release];
-    [mRedoStack release];
-    [mRunLoopModes release];
-    [mProxy release];
+    
+    
+    
+    
     [super dealloc];
 }
 
@@ -1052,15 +1052,15 @@
         }
     }
 
-    [temp release];
+    
 }
 
 - (void)setActionName:(NSString*)name
 {
     // sets the group's action name. In general this is automatically handled by the owning undo manager
 
-    [name retain];
-    [mActionName release];
+    
+    
     mActionName = name;
 }
 
@@ -1099,8 +1099,8 @@
 {
     //NSLog(@"deallocating undo group %@", self );
 
-    [mTasks release];
-    [mActionName release];
+    
+    
     [super dealloc];
 }
 
@@ -1130,9 +1130,8 @@
             mTarget = [inv target];
             [inv setTarget:nil];
             [inv retainArguments];
-            mInvocation = [inv retain];
+            mInvocation = inv;
         } else {
-            [self autorelease];
             self = nil;
         }
     }
@@ -1172,10 +1171,10 @@
     // sets the invocation's target, optionally retaining it.
 
     if (retainIt)
-        [target retain];
+        
 
     if (mTargetRetained)
-        [mTarget release];
+        
 
     mTarget = target;
     mTargetRetained = retainIt;
@@ -1209,16 +1208,16 @@
 
 - (id)init
 {
-    [self autorelease];
+    
     return nil;
 }
 
 - (void)dealloc
 {
-    [mInvocation release];
+    
 
     if (mTargetRetained)
-        [mTarget release];
+        
 
     [super dealloc];
 }

@@ -71,7 +71,7 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     LogEvent_(kInfoEvent, @"size = %@, dpi = %d, rep = %@", NSStringFromSize(bmSize), dpi, bmRep);
 
     NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithBitmapImageRep:bmRep];
-    [bmRep release];
+    
 
     SAVE_GRAPHICS_CONTEXT //[NSGraphicsContext saveGraphicsState];
         [NSGraphicsContext setCurrentContext : context];
@@ -96,7 +96,7 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     RESTORE_GRAPHICS_CONTEXT //[NSGraphicsContext restoreGraphicsState];
         CGImageRef image = CGBitmapContextCreateImage([context graphicsPort]);
 
-    return (CGImageRef)[(NSObject*)image autorelease];
+    return (CGImageRef) (NSObject*) image;
 }
 
 /** @brief Returns JPEG data for the drawing.
@@ -121,7 +121,7 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     if (scale == 0)
         scale = 1.0;
 
-    NSMutableDictionary* options = [[props mutableCopy] autorelease];
+    NSMutableDictionary* options = [props mutableCopy];
 
     [options setObject:[NSNumber numberWithInteger:dpi]
                 forKey:(NSString*)kCGImagePropertyDPIWidth];
@@ -164,7 +164,7 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     CFRelease(destRef);
 
     if (result)
-        return [(NSData*)data autorelease];
+        return (NSData*)data;
     else {
         CFRelease(data);
         return nil;
@@ -191,7 +191,7 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     if (scale == 0)
         scale = 1.0;
 
-    NSMutableDictionary* options = [[props mutableCopy] autorelease];
+    NSMutableDictionary* options = [props mutableCopy];
 
     [options setObject:[NSNumber numberWithInteger:dpi]
                 forKey:(NSString*)kCGImagePropertyDPIWidth];
@@ -262,7 +262,7 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     CFRelease(destRef);
 
     if (result)
-        return [(NSData*)data autorelease];
+        return (NSData*)data;
     else {
         CFRelease(data);
         return nil;
@@ -289,7 +289,7 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     if (scale == 0)
         scale = 1.0;
 
-    NSMutableDictionary* options = [[props mutableCopy] autorelease];
+    NSMutableDictionary* options = [props mutableCopy];
 
     [options setObject:[NSNumber numberWithInteger:dpi]
                 forKey:(NSString*)kCGImagePropertyDPIWidth];
@@ -327,7 +327,7 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     CFRelease(destRef);
 
     if (result)
-        return [(NSData*)data autorelease];
+        return (NSData*)data;
     else {
         CFRelease(data);
         return nil;

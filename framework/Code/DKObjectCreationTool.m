@@ -48,8 +48,8 @@ static DKStyle* sCreatedObjectsStyle = nil;
     NSAssert(shape != nil, @"trying to make a tool for nil shape");
 
     id cpy = [shape copyWithZone:nil];
-    DKObjectCreationTool* dt = [[[DKObjectCreationTool alloc] initWithPrototypeObject:cpy] autorelease];
-    [cpy release];
+    DKObjectCreationTool* dt = [[DKObjectCreationTool alloc] initWithPrototypeObject:cpy];
+    
 
     [DKDrawingTool registerDrawingTool:dt
                               withName:name];
@@ -65,8 +65,8 @@ static DKStyle* sCreatedObjectsStyle = nil;
     if (![aStyle isEqualToStyle:sCreatedObjectsStyle]) {
         //NSLog(@"setting style for created objects = '%@'", [aStyle name]);
 
-        [aStyle retain];
-        [sCreatedObjectsStyle release];
+        
+        
         sCreatedObjectsStyle = aStyle;
         [[NSNotificationCenter defaultCenter] postNotificationName:kDKDrawingToolCreatedObjectsStyleDidChange
                                                             object:self];
@@ -97,7 +97,6 @@ static DKStyle* sCreatedObjectsStyle = nil;
         [self setStylePickupEnabled:YES];
 
         if (m_prototypeObject == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -113,8 +112,8 @@ static DKStyle* sCreatedObjectsStyle = nil;
 {
     NSAssert(aPrototype != nil, @"prototype object cannot be nil");
 
-    [aPrototype retain];
-    [m_prototypeObject release];
+    
+    
     m_prototypeObject = aPrototype;
 }
 
@@ -136,7 +135,7 @@ static DKStyle* sCreatedObjectsStyle = nil;
     [[NSNotificationCenter defaultCenter] postNotificationName:kDKDrawingToolWillMakeNewObjectNotification
                                                         object:self];
 
-    id obj = [[[self prototype] copy] autorelease];
+    id obj = [[self prototype] copy];
 
     NSAssert(obj != nil, @"couldn't create new object from prototype");
 
@@ -212,7 +211,7 @@ static DKStyle* sCreatedObjectsStyle = nil;
         }
         @catch (NSException* e)
         {
-            [m_protoObject release];
+            
             m_protoObject = nil;
         }
 
@@ -228,7 +227,7 @@ static DKStyle* sCreatedObjectsStyle = nil;
 
             [[layer undoManager] removeAllActionsWithTarget:m_protoObject];
 
-            [m_protoObject release];
+            
             m_protoObject = nil;
 
             // turn undo back on
@@ -251,7 +250,7 @@ static DKStyle* sCreatedObjectsStyle = nil;
 
             LogEvent_(kReactiveEvent, @"object OK - committed to layer");
 
-            [m_protoObject release];
+            
             m_protoObject = nil;
 
             result = YES;
@@ -268,7 +267,7 @@ static DKStyle* sCreatedObjectsStyle = nil;
  */
 - (void)dealloc
 {
-    [m_prototypeObject release];
+    
     [super dealloc];
 }
 
@@ -413,7 +412,7 @@ static DKStyle* sCreatedObjectsStyle = nil;
         // because this tool creates new objects, ignore the <obj> parameter and just make a new one
 
         if (m_protoObject == nil)
-            m_protoObject = [[self objectFromPrototype] retain];
+            m_protoObject = [self objectFromPrototype];
 
         NSAssert(m_protoObject != nil, @"creation tool couldn't create object from prototype");
 
@@ -458,7 +457,7 @@ static DKStyle* sCreatedObjectsStyle = nil;
         }
         @catch (NSException* excp)
         {
-            [m_protoObject release];
+            
             m_protoObject = nil;
 
             [[layer undoManager] enableUndoRegistration];

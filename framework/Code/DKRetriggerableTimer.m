@@ -24,7 +24,7 @@
     [rt setAction:action];
     [rt setTarget:target];
 
-    return [rt autorelease];
+    return rt;
 }
 
 - (id)initWithPeriod:(NSTimeInterval)period

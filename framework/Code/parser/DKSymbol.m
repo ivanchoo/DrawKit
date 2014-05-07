@@ -33,7 +33,7 @@ static NSInteger sSymCounter = 0;
                                          index:(++sSymCounter)];
         [[DKSymbol symbolMap] setValue:sym
                                 forKey:[sym string]];
-        [sym release];
+        
     }
 
     return sym;
@@ -44,7 +44,7 @@ static NSInteger sSymCounter = 0;
     NSString* str = [[NSString alloc] initWithCString:cstr
                                                length:len];
     DKSymbol* sym = [DKSymbol symbolForString:str];
-    [str release];
+    
     return sym;
 }
 
@@ -53,11 +53,10 @@ static NSInteger sSymCounter = 0;
 {
     self = [super init];
     if (self != nil) {
-        mString = [str retain];
+        mString = str;
         mIndex = ndx;
 
         if (mString == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -118,7 +117,7 @@ static NSInteger sSymCounter = 0;
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [mString release];
+    
 
     [super dealloc];
 }
@@ -139,7 +138,7 @@ static NSInteger sSymCounter = 0;
 {
 #pragma unused(zone)
 
-    return [self retain];
+    return self;
 }
 
 @end

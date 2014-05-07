@@ -751,7 +751,7 @@ static CGFloat sAngleConstraint = 0.261799387799; // 15°
                               action:NULL
                        keyEquivalent:@""];
     [item setSubmenu:sidesMenu];
-    [sidesMenu release];
+    
 
     [[theMenu addItemWithTitle:NSLocalizedString(@"Convert To Path", @"menu item for convert to path")
                         action:@selector(convertToPath:)

@@ -234,7 +234,7 @@ static inline NSUInteger childNodeAtIndex(NSUInteger nodeIndex)
     // is first created, and whenever the canvas size changes.
 
     if (!NSEqualSizes(size, [mTree canvasSize])) {
-        [mTree release];
+        
 
         NSUInteger depth = (mTreeDepth == 0 ? depthForObjectCount([self countOfObjects]) : mTreeDepth);
         mTree = [[DKBSPIndexTree alloc] initWithCanvasSize:size
@@ -312,7 +312,7 @@ static inline NSUInteger childNodeAtIndex(NSUInteger nodeIndex)
 
 - (void)dealloc
 {
-    [mTree release];
+    
     [super dealloc];
 }
 
@@ -437,7 +437,7 @@ static inline NSUInteger childNodeAtIndex(NSUInteger nodeIndex)
     for (i = 0; i < nodeCount; ++i) {
         DKBSPNode* node = [[DKBSPNode alloc] init];
         [mNodes addObject:node];
-        [node release];
+        
     }
 
     [self allocateLeaves:(1 << depth)];
@@ -756,7 +756,7 @@ static NSUInteger sLeafCount = 0;
     for (i = 0; i < howMany; ++i) {
         id leaf = [[[[self class] leafClass] alloc] init];
         [mLeaves addObject:leaf];
-        [leaf release];
+        
     }
 }
 
@@ -774,10 +774,10 @@ static NSUInteger sLeafCount = 0;
 
 - (void)dealloc
 {
-    [mNodes release];
-    [mLeaves release];
-    [mResults release];
-    [mDebugPath release];
+    
+    
+    
+    
 
     [super dealloc];
 }

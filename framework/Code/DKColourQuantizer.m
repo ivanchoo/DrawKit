@@ -79,7 +79,6 @@ static inline void indexToRGB_332(NSUInteger i, NSUInteger rgb[3])
         m_cTable = [[NSMutableArray alloc] init];
 
         if (m_cTable == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -179,7 +178,7 @@ static inline void indexToRGB_332(NSUInteger i, NSUInteger rgb[3])
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [m_cTable release];
+    
 
     [super dealloc];
 }

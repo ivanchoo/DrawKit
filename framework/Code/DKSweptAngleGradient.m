@@ -35,7 +35,7 @@
     [sa addColor:c2
               at:1];
 
-    return [sa autorelease];
+    return sa;
 }
 
 #pragma mark -

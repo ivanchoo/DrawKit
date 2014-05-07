@@ -23,7 +23,6 @@
         [self setCoverageMethod:kDKDrawingImageCoverageNormal];
 
         if (m_image == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -33,15 +32,15 @@
 
 - (id)initWithContentsOfFile:(NSString*)imagefile
 {
-    NSImage* img = [[[NSImage alloc] initWithContentsOfFile:imagefile] autorelease];
+    NSImage* img = [[NSImage alloc] initWithContentsOfFile:imagefile];
     return [self initWithImage:img];
 }
 
 #pragma mark -
 - (void)setImage:(NSImage*)image
 {
-    [image retain];
-    [m_image release];
+    
+    
     m_image = image;
     [m_image setFlipped:YES];
 }
@@ -171,7 +170,7 @@
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [m_image release];
+    
 
     [super dealloc];
 }
@@ -201,7 +200,6 @@
         [self setCoverageMethod:[coder decodeIntegerForKey:@"coveragemethod"]];
 
         if (m_image == nil) {
-            [self autorelease];
             self = nil;
         }
     }

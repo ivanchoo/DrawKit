@@ -143,18 +143,18 @@
         cl = [expr objectAtIndex:0];
 
     if ([cl respondsToSelector:@selector(instantiateFromExpression:)])
-        obj = [[cl instantiateFromExpression:expr] retain];
+        obj = [cl instantiateFromExpression:expr];
     else
         obj = [[[cl class] alloc] initWithExpression:expr];
 
-    return [obj autorelease];
+    return obj;
 }
 
 #pragma mark -
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [mParser release];
+    
 
     [super dealloc];
 }
@@ -166,7 +166,6 @@
         mParser = [[DKParser alloc] init];
 
         if (mParser == nil) {
-            [self autorelease];
             self = nil;
         }
     }

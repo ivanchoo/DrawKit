@@ -54,8 +54,8 @@ static NSDictionary* sTraceParams = nil; // use default
 #pragma mark -
 + (void)setTracingParameters:(NSDictionary*)traceInfo
 {
-    [traceInfo retain];
-    [sTraceParams release];
+    
+    
     sTraceParams = traceInfo;
 }
 
@@ -72,7 +72,7 @@ static NSDictionary* sTraceParams = nil; // use default
     if ([shapes count] > 0) {
         DKShapeGroup* group = [[DKShapeGroup alloc] initWithObjectsInArray:shapes];
         [group setLocation:[self location]];
-        return [group autorelease];
+        return group;
     } else
         return nil;
 }
@@ -84,7 +84,7 @@ static NSDictionary* sTraceParams = nil; // use default
     if ([shapes count] > 0) {
         DKShapeGroup* group = [[DKShapeGroup alloc] initWithObjectsInArray:shapes];
         [group setLocation:[self location]];
-        return [group autorelease];
+        return group;
     } else
         return nil;
 }
@@ -96,7 +96,7 @@ static NSDictionary* sTraceParams = nil; // use default
     if ([shapes count] > 0) {
         DKShapeGroup* group = [[DKShapeGroup alloc] initWithObjectsInArray:shapes];
         [group setLocation:[self location]];
-        return [group autorelease];
+        return group;
     } else
         return nil;
 }
@@ -148,7 +148,7 @@ static NSDictionary* sTraceParams = nil; // use default
         }
     }
 
-    return [listOfShapes autorelease];
+    return listOfShapes;
 }
 
 - (NSArray*)makeObjectsByColourVectorizingWithPrecision:(NSInteger)colourPrecision
@@ -190,7 +190,7 @@ static NSDictionary* sTraceParams = nil; // use default
         }
     }
 
-    return [listOfShapes autorelease];
+    return listOfShapes;
 }
 
 #pragma mark -

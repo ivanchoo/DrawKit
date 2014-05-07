@@ -59,7 +59,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
 
     [te setText:str];
 
-    return [te autorelease];
+    return te;
 }
 
 /** @brief Create an instance of a DKTextShape with the RTF data and rect.
@@ -75,9 +75,9 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     NSAttributedString* str = [[NSAttributedString alloc] initWithRTF:rtfData
                                                    documentAttributes:nil];
     [te setText:str];
-    [str release];
+    
 
-    return [te autorelease];
+    return te;
 }
 
 /** @brief Create an instance of a DKTextShape with the given string, laid out on one line.
@@ -102,7 +102,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     [te setText:str];
     [te sizeVerticallyToFitText];
 
-    return [te autorelease];
+    return te;
 }
 
 #pragma mark -
@@ -114,8 +114,8 @@ static NSString* sDefault_string = @"Double-click to edit this text";
  */
 + (void)setDefaultTextString:(NSString*)str
 {
-    [str retain];
-    [sDefault_string release];
+    
+    
     sDefault_string = str;
 }
 
@@ -163,7 +163,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     static NSBezierPath* mtp = nil;
 
     if (mtp == nil) {
-        mtp = [[NSBezierPath bezierPathWithRect:NSMakeRect(0, 0, 1, 1)] retain];
+        mtp = [NSBezierPath bezierPathWithRect:NSMakeRect(0, 0, 1, 1)];
 
         [mtp moveToPoint:NSMakePoint(PLUS_SIGN_A, 0.1)];
         [mtp lineToPoint:NSMakePoint(PLUS_SIGN_B, 0.1)];
@@ -313,7 +313,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
             [self setText:str];
         }
 
-        [str release];
+        
     }
 }
 
@@ -521,7 +521,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
 
         [currentStyle setTextAttributes:ta];
 
-        return [currentStyle autorelease];
+        return currentStyle;
     }
 }
 
@@ -689,7 +689,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
             [newAdHocStyle setName:[NSString stringWithFormat:@"%@*", newname]];
 
         [self setStyle:newAdHocStyle];
-        [newAdHocStyle release];
+        
 
         //NSLog(@"text shape mutated style: %@", self );
     }
@@ -971,10 +971,10 @@ static NSString* sDefault_string = @"Double-click to edit this text";
         [layer addObject:so
                  atIndex:myIndex];
         [layer replaceSelectionWithObject:so];
-        [self retain];
+        
         [layer removeObject:self];
         [layer commitSelectionUndoWithActionName:NSLocalizedString(@"Convert To Shape", @"undo string for convert text to shape")];
-        [self release];
+        
     } else
         NSBeep();
 }
@@ -993,10 +993,10 @@ static NSString* sDefault_string = @"Double-click to edit this text";
         [layer addObject:so
                  atIndex:myIndex];
         [layer replaceSelectionWithObject:so];
-        [self retain];
+        
         [layer removeObject:self];
         [layer commitSelectionUndoWithActionName:NSLocalizedString(@"Convert To Shape Group", @"undo string for convert text to group")];
-        [self release];
+        
     } else
         NSBeep();
 }
@@ -1018,10 +1018,10 @@ static NSString* sDefault_string = @"Double-click to edit this text";
         [layer addObject:so
                  atIndex:myIndex];
         [layer replaceSelectionWithObject:so];
-        [self retain];
+        
         [layer removeObject:self];
         [layer commitSelectionUndoWithActionName:NSLocalizedString(@"Convert To Text Path", @"undo string for convert to text path")];
-        [self release];
+        
     } else
         NSBeep();
 }
@@ -1085,7 +1085,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     if ([[self style] hasTextAttributes])
         [adorn setTextAttributes:[[self style] textAttributes]];
 
-    return [adorn autorelease];
+    return adorn;
 }
 
 - (void)setTextAdornment:(DKTextAdornment*)adornment
@@ -1097,11 +1097,11 @@ static NSString* sDefault_string = @"Double-click to edit this text";
                                                           object:mTextAdornment];
 
             [mTextAdornment tearDownKVOForObserver:self];
-            [mTextAdornment release];
+            
             mTextAdornment = nil;
         }
 
-        mTextAdornment = [adornment retain];
+        mTextAdornment = adornment;
 
         [mTextAdornment setUpKVOForObserver:self];
 
@@ -1135,7 +1135,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
 
     DKTextAdornment* ta = [[self textAdornment] copy];
     [textPath setTextAdornment:ta];
-    [ta release];
+    
 
     [self setGhosted:ghosted];
 
@@ -1333,7 +1333,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     [[theMenu addItemWithTitle:NSLocalizedString(@"Font", @"menu item for Font")
                         action:nil
                  keyEquivalent:@""] setSubmenu:fm];
-    [fm release];
+    
 
     [theMenu addItem:[NSMenuItem separatorItem]];
 
@@ -1378,7 +1378,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     [[theMenu addItemWithTitle:NSLocalizedString(@"Vertical Alignment", @"menu item for vertical alignment")
                         action:nil
                  keyEquivalent:@""] setSubmenu:vert];
-    [vert release];
+    
 #endif
 
     NSMenu* convert = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"Convert To", @"menu item for convert to submenu")];
@@ -1397,7 +1397,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
                        keyEquivalent:@""];
 
     [item setSubmenu:convert];
-    [convert release];
+    
     [item setTag:kDKConvertToSubmenuTag];
 
     [super populateContextualMenu:theMenu];
@@ -1489,7 +1489,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     [self endEditing];
 
 #ifdef DRAWKIT_DEPRECATED
-    [m_text release];
+    
 #endif
     [self setTextAdornment:nil];
     [super dealloc];
@@ -1569,7 +1569,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
 
     DKTextAdornment* ta = [[self textAdornment] copyWithZone:zone];
     [copy setTextAdornment:ta];
-    [ta release];
+    
 
     return copy;
 }

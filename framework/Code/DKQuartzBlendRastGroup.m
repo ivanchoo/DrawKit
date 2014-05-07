@@ -36,8 +36,8 @@ static CGImageRef CreateMaskFromImage(NSImage* image);
 #pragma mark -
 - (void)setMaskImage:(NSImage*)image
 {
-    [image retain];
-    [m_maskImage release];
+    
+    
     m_maskImage = image;
 }
 
@@ -68,7 +68,7 @@ static CGImageRef CreateMaskFromImage(NSImage* image);
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [m_maskImage release];
+    
 
     [super dealloc];
 }

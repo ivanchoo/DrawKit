@@ -71,7 +71,7 @@ static BOOL CornerBevel(const NSPoint* pointsIn, CGFloat offset, NSBezierPath* n
 
         [copy transformUsingAffineTransform:xfm];
 
-        return [copy autorelease];
+        return copy;
     }
 }
 
@@ -97,7 +97,7 @@ static BOOL CornerBevel(const NSPoint* pointsIn, CGFloat offset, NSBezierPath* n
         NSAffineTransform* xfm = RotationTransform(angle, cp);
         [copy transformUsingAffineTransform:xfm];
 
-        return [copy autorelease];
+        return copy;
     }
 }
 
@@ -134,7 +134,7 @@ static BOOL CornerBevel(const NSPoint* pointsIn, CGFloat offset, NSBezierPath* n
 
         [copy transformUsingAffineTransform:xfm];
 
-        return [copy autorelease];
+        return copy;
     }
 }
 
@@ -152,7 +152,7 @@ static BOOL CornerBevel(const NSPoint* pointsIn, CGFloat offset, NSBezierPath* n
 
     [copy transformUsingAffineTransform:xfm];
 
-    return [copy autorelease];
+    return copy;
 }
 
 - (NSBezierPath*)verticallyFlippedPathAboutPoint:(NSPoint)cp
@@ -169,7 +169,7 @@ static BOOL CornerBevel(const NSPoint* pointsIn, CGFloat offset, NSBezierPath* n
 
     [copy transformUsingAffineTransform:xfm];
 
-    return [copy autorelease];
+    return copy;
 }
 
 - (NSBezierPath*)horizontallyFlippedPath
@@ -1111,7 +1111,7 @@ static void InterpolatePoints(const NSPoint* v, NSPoint* cp1, NSPoint* cp2, cons
         }
     }
 
-    return [newPath autorelease];
+    return newPath;
 }
 
 - (NSBezierPath*)bezierPathWithRoughenedStrokeOutline:(CGFloat)amount
@@ -1490,7 +1490,7 @@ static void InterpolatePoints(const NSPoint* v, NSPoint* cp1, NSPoint* cp2, cons
             added = YES;
         }
     }
-    return [sp autorelease];
+    return sp;
 }
 
 - (NSInteger)countSubPaths

@@ -78,8 +78,8 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
     if ([storage conformsToProtocol:@protocol(DKObjectStorage)]) {
         LogEvent_(kReactiveEvent, @"owner layer (%@) setting storage = %@", self, storage);
 
-        [storage retain];
-        [mStorage release];
+        
+        
         mStorage = storage;
     }
 }
@@ -132,7 +132,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
  */
 - (NSArray*)objects
 {
-    return [[[[self storage] objects] copy] autorelease];
+    return [[[self storage] objects] copy];
 }
 
 /** @brief Returns objects that are available to the user, that is, not locked or invisible
@@ -168,7 +168,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
                 [ao addObject:od];
         }
     }
-    return [ao autorelease];
+    return ao;
 }
 
 /** @brief Returns objects that are available to the user of the given class
@@ -190,7 +190,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
                 [ao addObject:od];
         }
     }
-    return [ao autorelease];
+    return ao;
 }
 
 /** @brief Returns objects that are visible to the user, but may be locked
@@ -226,7 +226,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
         }
     }
 
-    return [vo autorelease];
+    return vo;
 }
 
 /** @brief Returns objects that share the given style
@@ -248,7 +248,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
             [ao addObject:od];
     }
 
-    return [ao autorelease];
+    return ao;
 }
 
 /** @brief Returns objects that respond to the selector with the value <answer>
@@ -365,7 +365,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
             [mset addIndex:indx];
     }
 
-    return [mset autorelease];
+    return mset;
 }
 
 #pragma mark -
@@ -407,7 +407,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
     NSAssert(indx < [self countOfObjects], @"error - index is beyond bounds");
 
     if (![self lockedOrHidden]) {
-        DKDrawableObject* obj = [[self objectInObjectsAtIndex:indx] retain];
+        DKDrawableObject* obj = [self objectInObjectsAtIndex:indx];
         LogEvent_(kReactiveEvent, @"removing object %@, index = %d", obj, indx);
 
         [[[self undoManager] prepareWithInvocationTarget:self] insertObject:obj
@@ -419,7 +419,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
         [[self storage] removeObjectFromObjectsAtIndex:indx];
         [obj objectWasRemovedFromLayer:self];
         [obj setContainer:nil];
-        [obj release];
+        
 
         [[NSNotificationCenter defaultCenter] postNotificationName:kDKLayerDidRemoveObject
                                                             object:self];
@@ -852,7 +852,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
         [self drawVisibleObjects];
         [img unlockFocus];
     }
-    return [img autorelease];
+    return img;
 }
 
 /** @brief Get a PDF of the current visible objects in the layer
@@ -880,7 +880,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
         //NSLog(@"pdf view = %@", pdfView );
 
         pdfData = [pdfView dataWithPDFInsideRect:sr];
-        [pdfView release];
+        
 
         //NSLog(@"created PDF data in rect: %@, data size = %d", NSStringFromRect( sr ), [pdfData length]);
     }
@@ -903,7 +903,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
     NSAssert(pend != nil, @"pending object cannot be nil");
 
     [self removePendingObject];
-    mNewObjectPending = [pend retain];
+    mNewObjectPending = pend;
     [mNewObjectPending setContainer:self];
 }
 
@@ -917,7 +917,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
 {
     if (mNewObjectPending != nil) {
         [mNewObjectPending notifyVisualChange];
-        [mNewObjectPending release];
+        
         mNewObjectPending = nil;
     }
 }
@@ -1430,7 +1430,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
             [hits addObject:o];
     }
 
-    return [hits autorelease];
+    return hits;
 }
 
 /** @brief An object owned by the layer was double-clicked
@@ -1793,7 +1793,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
         }
     }
 
-    return [unionOfAllStyles autorelease];
+    return unionOfAllStyles;
 }
 
 /** @brief Returns a list of styles used by the current set of objects that are also registered
@@ -1821,7 +1821,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
         }
     }
 
-    return [unionOfAllStyles autorelease];
+    return unionOfAllStyles;
 }
 
 /** @brief Given a set of styles, replace those that have a matching key with the objects in the set
@@ -1898,7 +1898,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
     [[self objects] makeObjectsPerformSelector:@selector(setContainer:)
                                     withObject:nil];
 
-    [mStorage release];
+    
     [super dealloc];
 }
 
@@ -2079,7 +2079,7 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
             cp.y += [imshape size].height * 0.5f;
 
             dropObjects = [NSArray arrayWithObject:imshape];
-            [imshape release];
+            
             [self addObjects:dropObjects
                 fromPasteboard:pb
                 atDropLocation:cp];

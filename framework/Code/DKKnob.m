@@ -30,7 +30,7 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 /**  */
 + (id)standardKnobs
 {
-    return [[[DKKnob alloc] init] autorelease];
+    return [[DKKnob alloc] init];
 }
 
 #pragma mark -
@@ -374,8 +374,8 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 - (void)setControlBarColour:(NSColor*)clr
 {
-    [clr retain];
-    [mControlBarColour release];
+    
+    
     mControlBarColour = clr;
 }
 
@@ -495,11 +495,11 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 - (void)dealloc
 {
-    [mControlKnobColour release];
-    [mRotationKnobColour release];
-    [mControlOnPathPointColour release];
-    [mControlOffPathPointColour release];
-    [mControlBarColour release];
+    
+    
+    
+    
+    
     [super dealloc];
 }
 
@@ -567,8 +567,8 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 + (void)setControlKnobColour:(NSColor*)clr
 {
-    [clr retain];
-    [sKnobColour release];
+    
+    
     sKnobColour = clr;
 }
 
@@ -585,8 +585,8 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 + (void)setRotationKnobColour:(NSColor*)clr
 {
-    [clr retain];
-    [sRotationColour release];
+    
+    
     sRotationColour = clr;
 }
 
@@ -600,8 +600,8 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 + (void)setControlOnPathPointColour:(NSColor*)clr
 {
-    [clr retain];
-    [sPointColour release];
+    
+    
     sPointColour = clr;
 }
 
@@ -615,8 +615,8 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 + (void)setControlOffPathPointColour:(NSColor*)clr
 {
-    [clr retain];
-    [sOffPointColour release];
+    
+    
     sOffPointColour = clr;
 }
 
@@ -630,8 +630,8 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 + (void)setControlBarColour:(NSColor*)clr
 {
-    [clr retain];
-    [sBarColour release];
+    
+    
     sBarColour = clr;
 }
 
@@ -776,8 +776,8 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 - (void)setControlKnobColour:(NSColor*)clr
 {
-    [clr retain];
-    [mControlKnobColour release];
+    
+    
     mControlKnobColour = clr;
 }
 
@@ -788,8 +788,8 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 - (void)setRotationKnobColour:(NSColor*)clr
 {
-    [clr retain];
-    [mRotationKnobColour release];
+    
+    
     mRotationKnobColour = clr;
 }
 
@@ -800,8 +800,8 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 - (void)setControlOnPathPointColour:(NSColor*)clr
 {
-    [clr retain];
-    [mControlOnPathPointColour release];
+    
+    
     mControlOnPathPointColour = clr;
 }
 
@@ -812,8 +812,8 @@ static NSSize sKnobSize = { 6.0, 6.0 };
 
 - (void)setControlOffPathPointColour:(NSColor*)clr
 {
-    [clr retain];
-    [mControlOffPathPointColour release];
+    
+    
     mControlOffPathPointColour = clr;
 }
 

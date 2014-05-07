@@ -63,7 +63,7 @@
 - (void)dealloc
 {
     [mTimer invalidate];
-    [mDelegate release];
+    
     [super dealloc];
 }
 
@@ -72,8 +72,8 @@
     // delegate is retained and released when one-shot completes. This allows some effects to work even
     // though the original delegate might be released by the caller.
 
-    [del retain];
-    [mDelegate release];
+    
+    
     mDelegate = del;
 }
 
@@ -96,7 +96,7 @@
         if (mDelegate && [mDelegate respondsToSelector:@selector(oneShotComplete)])
             [mDelegate oneShotComplete];
 
-        [self release];
+        
     } else {
         if (mDelegate && [mDelegate respondsToSelector:@selector(oneShotHasReached:)])
             [mDelegate oneShotHasReached:val];

@@ -40,8 +40,8 @@
 
     if ([anObject isKindOfClass:[DKExpressionPair class]]) {
         id val = [self evaluateObject:[(DKExpressionPair*)anObject value]];
-        return [[[DKExpressionPair alloc] initWithKey:[(DKExpressionPair*)anObject key]
-                                                value:val] autorelease];
+        return [[DKExpressionPair alloc] initWithKey:[(DKExpressionPair*)anObject key]
+                                                value:val];
     }
 
     return anObject;
@@ -62,10 +62,10 @@
     while ((item = [curs nextObject]))
         [sexpr addObject:[self evaluateObject:item]];
 
-    value = [[self evaluateSimpleExpression:sexpr] retain];
-    [sexpr release];
+    value = [self evaluateSimpleExpression:sexpr];
+    
 
-    return [value autorelease];
+    return value;
 }
 
 - (id)evaluateSimpleExpression:(DKExpression*)expr
@@ -77,7 +77,7 @@
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [mSymbolTable release];
+    
 
     [super dealloc];
 }
@@ -89,7 +89,6 @@
         mSymbolTable = [[NSMutableDictionary alloc] init];
 
         if (mSymbolTable == nil) {
-            [self autorelease];
             self = nil;
         }
     }

@@ -153,7 +153,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         [testStorage setTreeDepth:10 + v];
     }
 
-    [testStorage release];
+    
     NSLog(@"testBSPStorage complete.");
 }
 
@@ -243,7 +243,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         [self verifyIndexedStorageIntegrity:testStorage];
     }
 
-    [testStorage release];
+    
     NSLog(@"testIndexedBSPStorage complete.");
 }
 
@@ -267,7 +267,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
 
         [storage insertObject:tso
              inObjectsAtIndex:i];
-        [tso release];
+        
 
         STAssertEqualObjects([tso storage], storage, @"storage back pointer was not correctly assigned");
 
@@ -301,7 +301,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
 
     STAssertEquals([storage countOfObjects], m - numberToDelete, @"deletion failed - number of objects remaining = %d, should be %d", [storage countOfObjects], m - numberToDelete);
 
-    [remIndexSet release];
+    
 }
 
 - (void)insertionTest:(id<DKObjectStorage>)storage canvasSize:(NSSize)canvasSize
@@ -334,7 +334,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
             [tso setBounds:br];
 
             [insertObjects addObject:tso];
-            [tso release];
+            
         }
     }
 
@@ -345,11 +345,11 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
                  atIndexes:remIndexSet];
 
     m += [insertObjects count];
-    [insertObjects release];
+    
 
     STAssertEquals(m, [storage countOfObjects], @"count of objects mismatched, expected %d, got %d", m, [storage countOfObjects]);
 
-    [remIndexSet release];
+    
 }
 
 - (void)replacementTest:(id<DKObjectStorage>)storage canvasSize:(NSSize)canvasSize
@@ -376,7 +376,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         tso = [[testStorableObject alloc] init];
         [tso setBounds:br];
 
-        orig = [[storage objectInObjectsAtIndex:ix] retain];
+        orig = [storage objectInObjectsAtIndex:ix];
         [storage replaceObjectInObjectsAtIndex:ix
                                     withObject:tso];
 
@@ -388,8 +388,8 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         STAssertEqualObjects([tso storage], storage, @"storage back-pointer incorrect after replacement (%@)", [tso storage]);
         STAssertNil([orig storage], @"replaced object does not have a nil back-pointer");
 
-        [orig release];
-        [tso release];
+        
+        
     }
 }
 
@@ -475,7 +475,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
                                           options:0];
     STAssertEquals([bspResults count], [objects count], @"object count mismatched when retrieving using the whole canvas size (expected %d, got %d)", [objects count], [bspResults count]);
 
-    [bruteForceSearchResults release];
+    
 }
 
 - (void)pointRetrievalTest:(id<DKObjectStorage>)storage canvasSize:(NSSize)canvasSize
@@ -542,7 +542,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         [pool drain];
     }
 
-    [bruteForceSearchResults release];
+    
 }
 
 - (void)repositioningTest:(id<DKObjectStorage>)storage canvasSize:(NSSize)canvasSize
@@ -623,8 +623,8 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         dx = [destIndexes indexGreaterThanIndex:dx];
     }
 
-    [srcIndexes release];
-    [destIndexes release];
+    
+    
 }
 
 #pragma mark -
@@ -754,7 +754,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         ix = [remIndexSet indexGreaterThanIndex:ix];
     }
 
-    [remIndexSet release];
+    
 }
 
 - (void)verifyIndexedStorageIntegrity:(DKBSPObjectStorage*)storage

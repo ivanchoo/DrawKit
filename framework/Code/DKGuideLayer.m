@@ -453,7 +453,7 @@ static BOOL sWasInside = NO;
         [guide setGuidePosition:p.x];
         [guide setIsVerticalGuide:YES];
         [self addGuide:guide];
-        [guide release];
+        
 
         // the layer is made active & visible so that the user gets the layer's cursor feedback and can reposition the guide if
         // it ends up not quite where they intended.
@@ -486,7 +486,7 @@ static BOOL sWasInside = NO;
         [guide setGuidePosition:p.y];
         [guide setIsVerticalGuide:NO];
         [self addGuide:guide];
-        [guide release];
+        
 
         // the layer is made active and visible so that the user gets the layer's cursor feedback and can reposition the guide if
         // it ends up not quite where they intended.
@@ -508,7 +508,7 @@ static BOOL sWasInside = NO;
 {
     NSMutableArray* ga = [[self horizontalGuides] mutableCopy];
     [ga addObjectsFromArray:[self verticalGuides]];
-    return [ga autorelease];
+    return ga;
 }
 
 /** @brief Adds a set of guides to th elayer
@@ -1042,7 +1042,7 @@ static BOOL sWasInside = NO;
 
     if (![self locked]) {
         if (menu == nil)
-            menu = [[[NSMenu alloc] initWithTitle:@"DK_GuideLayerContextualMenu"] autorelease]; // title never seen
+            menu = [[NSMenu alloc] initWithTitle:@"DK_GuideLayerContextualMenu"]; // title never seen
 
         NSMenuItem* item = [menu addItemWithTitle:NSLocalizedString(@"Clear Guides", nil)
                                            action:@selector(clearGuides:)
@@ -1065,8 +1065,8 @@ static BOOL sWasInside = NO;
  */
 - (void)dealloc
 {
-    [m_hGuides release];
-    [m_vGuides release];
+    
+    
 
     [super dealloc];
 }
@@ -1092,7 +1092,6 @@ static BOOL sWasInside = NO;
         [self setSelectionColour:[NSColor orangeColor]];
 
         if (m_hGuides == nil || m_vGuides == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -1141,7 +1140,6 @@ static BOOL sWasInside = NO;
         [self setGuideDeletionRect:dr];
 
         if (m_hGuides == nil || m_vGuides == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -1205,8 +1203,8 @@ static BOOL sWasInside = NO;
 
 - (void)setGuideColour:(NSColor*)colour
 {
-    [colour retain];
-    [m_colour release];
+    
+    
     m_colour = colour;
 }
 
@@ -1251,7 +1249,6 @@ static BOOL sWasInside = NO;
         m_isVertical = NO;
         [self setGuideColour:[NSColor cyanColor]];
         if (m_colour == nil) {
-            [self autorelease];
             self = nil;
         }
     }

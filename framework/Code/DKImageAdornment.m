@@ -23,20 +23,20 @@
 
     [gir setImage:image];
 
-    return [gir autorelease];
+    return gir;
 }
 
 + (DKImageAdornment*)imageAdornmentWithImageFromFile:(NSString*)path
 {
-    NSImage* image = [[[NSImage alloc] initWithContentsOfFile:path] autorelease];
+    NSImage* image = [[NSImage alloc] initWithContentsOfFile:path];
     return [self imageAdornmentWithImage:image];
 }
 
 #pragma mark -
 - (void)setImage:(NSImage*)image
 {
-    [image retain];
-    [m_image release];
+    
+    
     m_image = image;
 
     //[_image setFlipped:YES];
@@ -60,8 +60,8 @@
 
 - (void)setImageKey:(NSString*)key
 {
-    [key retain];
-    [mImageKey release];
+    
+    
     mImageKey = key;
 }
 
@@ -72,8 +72,8 @@
 
 - (void)setImageIdentifier:(NSString*)imageID
 {
-    [imageID retain];
-    [m_imageIdentifier release];
+    
+    
     m_imageIdentifier = imageID;
 }
 
@@ -254,9 +254,9 @@
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [m_imageIdentifier release];
-    [m_image release];
-    [mImageKey release];
+    
+    
+    
 
     [super dealloc];
 }

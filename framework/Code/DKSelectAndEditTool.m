@@ -143,8 +143,8 @@ NSString* kDKSelectionToolTargetObject = @"kDKSelectionToolTargetObject";
 {
     NSAssert(aStyle != nil, @"attempt to set a nil style for the selection marquee");
 
-    [aStyle retain];
-    [mMarqueeStyle release];
+    
+    
     mMarqueeStyle = aStyle;
 }
 
@@ -616,8 +616,8 @@ static void dragFunction_mouseUp(const void* obj, void* context)
  */
 - (void)setUndoAction:(NSString*)action
 {
-    [action retain];
-    [mUndoAction release];
+    
+    
     mUndoAction = action;
 }
 
@@ -678,8 +678,8 @@ static void dragFunction_mouseUp(const void* obj, void* context)
     switch (ph) {
     case kDKDragMouseDown: {
         if (mProxyDragImage == nil) {
-            mProxyDragImage = [[self prepareDragImage:objects
-                                              inLayer:layer] retain];
+            mProxyDragImage = [self prepareDragImage:objects
+                                              inLayer:layer];
 
             offset.width = p.x - NSMinX([layer selectionBounds]);
             offset.height = p.y - NSMinY([layer selectionBounds]);
@@ -720,7 +720,7 @@ static void dragFunction_mouseUp(const void* obj, void* context)
     } break;
 
     case kDKDragMouseUp: {
-        [mProxyDragImage release];
+        
         mProxyDragImage = nil;
         [layer setNeedsDisplayInRect:mProxyDragDestRect];
 
@@ -752,8 +752,8 @@ static void dragFunction_mouseUp(const void* obj, void* context)
 
 - (void)setDraggedObjects:(NSArray*)objects
 {
-    [objects retain];
-    [mDraggedObjects release];
+    
+    
     mDraggedObjects = objects;
 }
 
@@ -1335,9 +1335,9 @@ static void dragFunction_mouseUp(const void* obj, void* context)
  */
 - (void)dealloc
 {
-    [mMarqueeStyle release];
-    [mProxyDragImage release];
-    [mDraggedObjects release];
+    
+    
+    
     [super dealloc];
 }
 

@@ -60,7 +60,7 @@
         NSMutableArray* modSel = [sel mutableCopy];
         [modSel removeObject:result];
         [self removeObjectsInArray:modSel];
-        [modSel release];
+        
     } else {
         result = [[DKDrawableObject classForConversionRequestFor:[DKDrawableShape class]] drawableShapeWithBezierPath:rp
                                                                                                             withStyle:[firstObj style]];
@@ -333,7 +333,7 @@
                 NSMutableArray* modSel = [sel mutableCopy];
                 [modSel removeObject:firstObj];
                 [self removeObjectsInArray:modSel];
-                [modSel release];
+                
 
                 shape = firstObj;
             } else {

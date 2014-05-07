@@ -28,13 +28,13 @@ static NSUInteger euclid_hcf(NSUInteger a, NSUInteger b)
 /**  */
 + (DKStrokeDash*)defaultDash
 {
-    return [[[DKStrokeDash alloc] init] autorelease];
+    return [[DKStrokeDash alloc] init];
 }
 
 + (DKStrokeDash*)dashWithPattern:(CGFloat[])dashes count:(NSInteger)count
 {
-    return [[[DKStrokeDash alloc] initWithPattern:dashes
-                                            count:count] autorelease];
+    return [[DKStrokeDash alloc] initWithPattern:dashes
+                                            count:count];
 }
 
 + (DKStrokeDash*)dashWithName:(NSString*)name
@@ -282,7 +282,7 @@ static NSUInteger euclid_hcf(NSUInteger a, NSUInteger b)
     [path stroke];
     [image unlockFocus];
 
-    return [image autorelease];
+    return image;
 }
 
 - (NSImage*)standardDashSwatchImage

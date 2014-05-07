@@ -63,11 +63,11 @@
                 [copy setAngle:[o angle] + relAngle];
 
             [result addObject:copy];
-            [copy release];
+            
         }
     }
 
-    return [result autorelease];
+    return result;
 }
 
 /** @brief Duplicates one or more objects linearly
@@ -106,11 +106,11 @@
             [copy setLocation:location];
 
             [result addObject:copy];
-            [copy release];
+            
         }
     }
 
-    return [result autorelease];
+    return result;
 }
 
 /** @brief Automatically polar duplicates object to fit a circle exactly
@@ -213,7 +213,7 @@
             [copy setLocation:location];
 
             [result addObject:copy];
-            [copy release];
+            
         }
     }
 

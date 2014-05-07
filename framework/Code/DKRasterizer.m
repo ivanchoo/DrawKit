@@ -72,7 +72,7 @@ NSString* kDKRasterizerChangedPropertyKey = @"kDKRasterizerChangedPropertyKey";
 {
     NSString* nameCopy = [name copy];
 
-    [m_name release];
+    
     m_name = nameCopy;
 }
 
@@ -220,7 +220,7 @@ NSString* kDKRasterizerChangedPropertyKey = @"kDKRasterizerChangedPropertyKey";
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [m_name release];
+    
     [super dealloc];
 }
 

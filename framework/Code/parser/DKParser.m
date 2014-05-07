@@ -49,7 +49,7 @@ NSInteger dk_lex(id* val, YYLTYPE* yloc, void* reader)
     scan_init_buf(&scanr, (char*)[someData bytes]);
     dk_parse(self);
     scan_finalize(&scanr);
-    [pool release];
+    
 
     return ([mParseStack count] ? [mParseStack objectAtIndex:0] : nil);
 }
@@ -79,8 +79,8 @@ NSInteger dk_lex(id* val, YYLTYPE* yloc, void* reader)
 - (void)setDelegate:anObject;
 {
     if (mDelegate)
-        [mDelegate autorelease];
-    mDelegate = [anObject retain];
+        
+    mDelegate = anObject;
 }
 
 #pragma mark -
@@ -174,7 +174,7 @@ NSInteger dk_lex(id* val, YYLTYPE* yloc, void* reader)
 
 - pop
 {
-    id value = [[[mParseStack lastObject] retain] autorelease];
+    id value = [mParseStack lastObject];
     [mParseStack removeLastObject];
 
     return value;
@@ -189,12 +189,12 @@ NSInteger dk_lex(id* val, YYLTYPE* yloc, void* reader)
         if ([type isEqualToString:@"array"])
             return [NSMutableArray array];
         else {
-            DKExpression* expr = [[[DKExpression alloc] init] autorelease];
+            DKExpression* expr = [[DKExpression alloc] init];
             [(DKExpression*)expr setType:type];
             return expr;
         }
     } else {
-        return [[[factory alloc] init] autorelease];
+        return [[factory alloc] init];
     }
     //	return [self instantiateType:type withExpression:nil popping:NO];
 }
@@ -218,11 +218,11 @@ NSInteger dk_lex(id* val, YYLTYPE* yloc, void* reader)
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [numberFormatter release];
+    
 
-    [mDelegate release];
-    [mParseStack release];
-    [mFactories release];
+    
+    
+    
 
     [super dealloc];
 }
@@ -249,7 +249,6 @@ NSInteger dk_lex(id* val, YYLTYPE* yloc, void* reader)
         if (mFactories == nil
             || mParseStack == nil
             || numberFormatter == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -288,7 +287,7 @@ int main(int argc, char** argv)
         node = [reader parseContentsOfFile:[NSString stringWithCString:argv[1]]];
         fprintf(stdout, "%s\n", [[node description] cString]);
     }
-    [pool release];
+    
     return 0;
 }
 

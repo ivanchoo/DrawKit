@@ -42,7 +42,7 @@ static void perceptualCausticColorForColor(CGFloat* inputComponents, CGFloat* ou
                 at:1.0];
     [grad setAngleInDegrees:90];
 
-    return [grad autorelease];
+    return grad;
 }
 
 + (DKGradient*)aquaNormalGradient
@@ -71,7 +71,7 @@ static void perceptualCausticColorForColor(CGFloat* inputComponents, CGFloat* ou
                 at:1.0];
     [grad setAngleInDegrees:90];
 
-    return [grad autorelease];
+    return grad;
 }
 
 + (DKGradient*)aquaPressedGradient
@@ -100,7 +100,7 @@ static void perceptualCausticColorForColor(CGFloat* inputComponents, CGFloat* ou
                 at:1.0];
     [grad setAngleInDegrees:90];
 
-    return [grad autorelease];
+    return grad;
 }
 
 + (DKGradient*)unifiedSelectedGradient
@@ -119,7 +119,7 @@ static void perceptualCausticColorForColor(CGFloat* inputComponents, CGFloat* ou
                 at:1.0];
     [grad setAngleInDegrees:90];
 
-    return [grad autorelease];
+    return grad;
 }
 
 + (DKGradient*)unifiedNormalGradient
@@ -138,7 +138,7 @@ static void perceptualCausticColorForColor(CGFloat* inputComponents, CGFloat* ou
                 at:1.0];
     [grad setAngleInDegrees:90];
 
-    return [grad autorelease];
+    return grad;
 }
 
 + (DKGradient*)unifiedPressedGradient
@@ -157,7 +157,7 @@ static void perceptualCausticColorForColor(CGFloat* inputComponents, CGFloat* ou
                 at:1.0];
     [grad setAngleInDegrees:90];
 
-    return [grad autorelease];
+    return grad;
 }
 
 + (DKGradient*)unifiedDarkGradient
@@ -176,7 +176,7 @@ static void perceptualCausticColorForColor(CGFloat* inputComponents, CGFloat* ou
                 at:1.0];
     [grad setAngleInDegrees:90];
 
-    return [grad autorelease];
+    return grad;
 }
 
 + (DKGradient*)sourceListSelectedGradient
@@ -194,7 +194,7 @@ static void perceptualCausticColorForColor(CGFloat* inputComponents, CGFloat* ou
                 at:1.0];
     [grad setAngleInDegrees:90];
 
-    return [grad autorelease];
+    return grad;
 }
 
 + (DKGradient*)sourceListUnselectedGradient
@@ -213,7 +213,7 @@ static void perceptualCausticColorForColor(CGFloat* inputComponents, CGFloat* ou
                 at:1.0];
     [grad setAngleInDegrees:90];
 
-    return [grad autorelease];
+    return grad;
 }
 
 + (void)drawShinyGradientInRect:(NSRect)inRect withColour:(NSColor*)colour

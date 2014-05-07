@@ -151,8 +151,8 @@
 
 - (void)dealloc
 {
-    [mPathCache release];
-    [mCacheList release];
+    
+    
     [super dealloc];
 }
 

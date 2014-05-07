@@ -306,8 +306,8 @@ void LogLoggingState(NSArray* eventTypeNames)
 {
 	if (eventTypes != mEventTypes)
 	{
-		[mEventTypes release];
-		mEventTypes = [eventTypes retain];
+		
+		mEventTypes = eventTypes;
 	}
 	InitializePrefsForEventTypeNames();
 }
@@ -318,14 +318,14 @@ void LogLoggingState(NSArray* eventTypeNames)
 	{
 		[self loadNib];
 		
-		NSDictionary* eventTypes = [[self newEventTypes] autorelease];
+		NSDictionary* eventTypes = [self newEventTypes];
 		
 		NSAssert(eventTypes != nil, @"Expected valid eventTypes");
 		[self setEventTypes:eventTypes];
 	}
 	NSAssert(mEventTypes != nil, @"Expected valid mEventTypes");
 	
-	return [[mEventTypes retain] autorelease];
+	return mEventTypes;
 }
 
 
@@ -384,7 +384,7 @@ void LogLoggingState(NSArray* eventTypeNames)
 #pragma mark -
 - (NSDictionary*)newEventTypes
 {
-	NSMutableDictionary* eventTypes = [[[NSMutableDictionary alloc] initWithCapacity:kNumStandardEventTypes] autorelease];
+	NSMutableDictionary* eventTypes = [[NSMutableDictionary alloc] initWithCapacity:kNumStandardEventTypes];
 	
 	NSAssert(eventTypes != nil, @"Expected valid eventTypes");
 	unsigned i = 0;
@@ -594,7 +594,7 @@ void LogLoggingState(NSArray* eventTypeNames)
 
 - (void)dealloc
 {
-	[mEventTypes release];
+	
 	
 	[super dealloc];
 	sSharedLoggingController = nil;

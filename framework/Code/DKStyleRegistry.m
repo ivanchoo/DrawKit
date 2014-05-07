@@ -84,7 +84,7 @@ static BOOL s_NoDKDefaults = NO;
         id appDelegate = [NSApp delegate];
 
         if (appDelegate && [appDelegate respondsToSelector:@selector(applicationWillReturnStyleRegistry)])
-            s_styleRegistry = [[appDelegate applicationWillReturnStyleRegistry] retain];
+            s_styleRegistry = [appDelegate applicationWillReturnStyleRegistry];
 
         // if still nil, make a default one
 
@@ -778,7 +778,7 @@ static BOOL s_NoDKDefaults = NO;
                 readOK = YES;
             }
 
-            [regTemp release];
+            
         }
     }
 
@@ -1012,7 +1012,7 @@ static BOOL s_NoDKDefaults = NO;
                 [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationLow];
                 [swatch unlockFocus];
                 [item setImage:swatch];
-                [swatch release];
+                
             }
 
             // set the menu item to the object's name
@@ -1040,8 +1040,8 @@ static BOOL s_NoDKDefaults = NO;
 
 - (void)reassignUniqueKey
 {
-    [m_uniqueKey release];
-    m_uniqueKey = [[DKUniqueID uniqueKey] retain];
+    
+    m_uniqueKey = [DKUniqueID uniqueKey];
 }
 
 @end

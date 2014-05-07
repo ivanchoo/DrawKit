@@ -35,7 +35,7 @@ NSLayoutManager* sharedDrawingLayoutManager(void)
         [tc setWidthTracksTextView:NO];
         [tc setHeightTracksTextView:NO];
         [sharedLM addTextContainer:tc];
-        [tc release];
+        
 
         [sharedLM setUsesScreenFonts:NO];
     } else
@@ -59,12 +59,12 @@ NSLayoutManager* sharedCaptureLayoutManager(void)
         sharedLM = [[DKBezierLayoutManager alloc] init];
 
         [tc setTextView:tv];
-        [tv release];
+        
 
         [tc setWidthTracksTextView:NO];
         [tc setHeightTracksTextView:NO];
         [sharedLM addTextContainer:tc];
-        [tc release];
+        
 
         [sharedLM setUsesScreenFonts:NO];
     } else
@@ -203,7 +203,7 @@ NSLayoutManager* sharedCaptureLayoutManager(void)
         [contents removeLayoutManager:layoutMgr];
         [textContainer setBezierPath:nil];
     }
-    [contents release];
+    
 }
 
 - (NSSize)accurateSize
@@ -229,7 +229,7 @@ NSLayoutManager* sharedCaptureLayoutManager(void)
 
         [contents removeLayoutManager:layoutMgr];
     }
-    [contents release];
+    
 
     return as;
 }

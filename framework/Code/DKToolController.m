@@ -113,8 +113,8 @@ static DKDrawingTool* sGlobalTool = nil;
 
 + (void)setGlobalDrawingTool:(DKDrawingTool*)tool
 {
-    [tool retain];
-    [sGlobalTool release];
+    
+    
     sGlobalTool = tool;
 }
 
@@ -183,7 +183,7 @@ static DKDrawingTool* sGlobalTool = nil;
     NSAssert(aTool != nil, @"attempt to set a nil tool");
 
     if (aTool != [self drawingTool]) {
-        DKDrawingTool* oldTool = [[self drawingTool] retain];
+        DKDrawingTool* oldTool = [self drawingTool];
 
         [[NSNotificationCenter defaultCenter] postNotificationName:kDKWillChangeToolNotification
                                                             object:self];
@@ -191,8 +191,8 @@ static DKDrawingTool* sGlobalTool = nil;
 
         switch ([[self class] drawingToolOperatingScope]) {
         case kDKToolScopeLocalToView:
-            [aTool retain];
-            [mTool release];
+            
+            
             mTool = aTool;
             break;
 
@@ -213,7 +213,7 @@ static DKDrawingTool* sGlobalTool = nil;
         [[NSNotificationCenter defaultCenter] postNotificationName:kDKDidChangeToolNotification
                                                             object:self];
 
-        [oldTool release];
+        
 
         // check if the current layer is usable with the tool and the class enables auto-activation. If it does,
         // find an alternative layer and make it active
@@ -491,7 +491,7 @@ static DKDrawingTool* sGlobalTool = nil;
         se = [DKDrawingTool drawingToolWithName:kDKStandardSelectionToolName];
 
         if (se == nil)
-            se = [[[DKSelectAndEditTool alloc] init] autorelease];
+            se = [[DKSelectAndEditTool alloc] init];
 
         [self setDrawingTool:se];
     }
@@ -588,8 +588,8 @@ static DKDrawingTool* sGlobalTool = nil;
     DKDrawingTool* ct = [self drawingTool];
 
     if (event != mDragEvent) {
-        [mDragEvent release];
-        mDragEvent = [event retain];
+        
+        mDragEvent = event;
     }
 
     if ([event clickCount] <= 1) {
@@ -681,12 +681,12 @@ static DKDrawingTool* sGlobalTool = nil;
         se = [DKDrawingTool drawingToolWithName:kDKStandardSelectionToolName];
 
         if (se == nil)
-            se = [[[DKSelectAndEditTool alloc] init] autorelease];
+            se = [[DKSelectAndEditTool alloc] init];
 
         [self setDrawingTool:se];
     }
 
-    [mDragEvent release];
+    
     mDragEvent = nil;
 }
 
@@ -814,7 +814,7 @@ static DKDrawingTool* sGlobalTool = nil;
  */
 - (void)dealloc
 {
-    [mTool release];
+    
     [super dealloc];
 }
 

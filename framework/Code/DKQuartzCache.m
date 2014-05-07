@@ -14,14 +14,14 @@
 {
     DKQuartzCache* cache = [[self alloc] initWithContext:[NSGraphicsContext currentContext]
                                                  forRect:NSMakeRect(0, 0, size.width, size.height)];
-    return [cache autorelease];
+    return cache;
 }
 
 + (DKQuartzCache*)cacheForCurrentContextInRect:(NSRect)rect
 {
     DKQuartzCache* cache = [[self alloc] initWithContext:[NSGraphicsContext currentContext]
                                                  forRect:rect];
-    return [cache autorelease];
+    return cache;
 }
 
 + (DKQuartzCache*)cacheForImage:(NSImage*)image
@@ -38,7 +38,7 @@
               fraction:1.0];
     [cache unlockFocus];
 
-    return [cache autorelease];
+    return cache;
 }
 
 + (DKQuartzCache*)cacheForImageRep:(NSImageRep*)imageRep
@@ -51,7 +51,7 @@
     [imageRep drawAtPoint:NSZeroPoint];
     [cache unlockFocus];
 
-    return [cache autorelease];
+    return cache;
 }
 
 #pragma mark -

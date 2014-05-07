@@ -21,7 +21,7 @@
     DKFill* fill = [[DKFill alloc] init];
     [fill setColour:colour];
 
-    return [fill autorelease];
+    return fill;
 }
 
 + (DKFill*)fillWithGradient:(DKGradient*)gradient
@@ -30,7 +30,7 @@
 
     [fill setGradient:gradient];
     [fill setColour:nil];
-    return [fill autorelease];
+    return fill;
 }
 
 + (DKFill*)fillWithPatternImage:(NSImage*)image
@@ -52,8 +52,8 @@
 {
     //LogEvent_(kReactiveEvent, @"fill setting colour: %@", colour);
 
-    [colour retain];
-    [m_fillColour release];
+    
+    
     m_fillColour = colour;
 }
 
@@ -65,8 +65,8 @@
 #pragma mark -
 - (void)setShadow:(NSShadow*)shadw
 {
-    [shadw retain];
-    [m_shadow release];
+    
+    
     m_shadow = shadw;
 }
 
@@ -80,7 +80,7 @@
 {
     if (grad != [self gradient]) {
         if (grad != nil) {
-            [grad retain];
+            
 
             // the gradient itself is observable, so inform the root object:
             //[[[self container] root] observableWasAdded:grad];
@@ -89,7 +89,7 @@
         if (m_gradient != nil) {
             // stop observing the gradient object
             //[[[self container] root] observableWillBeRemoved:m_gradient];
-            [m_gradient release];
+            
         }
 
         m_gradient = grad;
@@ -150,9 +150,9 @@
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [m_gradient release];
-    [m_shadow release];
-    [m_fillColour release];
+    
+    
+    
 
     [super dealloc];
 }
@@ -303,11 +303,11 @@
 
     NSShadow* shcopy = [[self shadow] copyWithZone:zone];
     [copy setShadow:shcopy];
-    [shcopy release];
+    
 
     DKGradient* grcopy = [[self gradient] copyWithZone:zone];
     [copy setGradient:grcopy];
-    [grcopy release];
+    
 
     [copy setTracksObjectAngle:[self tracksObjectAngle]];
 

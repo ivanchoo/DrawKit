@@ -147,7 +147,7 @@
 
 - (void)dealloc
 {
-    [mPath release];
+    
     [super dealloc];
 }
 

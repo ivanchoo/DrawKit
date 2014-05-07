@@ -23,12 +23,12 @@
     // return the default pattern , which is based on some image - unlikely to be really useful so might be
     // better to do something else here???
 
-    return [[[self alloc] initWithImage:[NSImage imageNamed:@"Rect"]] autorelease];
+    return [[self alloc] initWithImage:[NSImage imageNamed:@"Rect"]];
 }
 
 + (DKFillPattern*)fillPatternWithImage:(NSImage*)image
 {
-    return [[[self alloc] initWithImage:image] autorelease];
+    return [[self alloc] initWithImage:image];
 }
 
 #pragma mark -
@@ -379,7 +379,7 @@
 
 - (void)dealloc
 {
-    [mMotifAngleRandCache release];
+    
     [super dealloc];
 }
 

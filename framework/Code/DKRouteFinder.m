@@ -44,7 +44,7 @@ static DKRouteAlgorithmType s_Algorithm = kDKUseNearestNeighbour; //kDKUseSimula
 
     DKRouteFinder* tsp = [[self alloc] initWithArray:arrayOfPoints];
 
-    return [tsp autorelease];
+    return tsp;
 }
 
 + (DKRouteFinder*)routeFinderWithObjects:(NSArray*)objects withValueForKey:(NSString*)key
@@ -177,12 +177,12 @@ static DKRouteAlgorithmType s_Algorithm = kDKUseNearestNeighbour; //kDKUseSimula
         // anneal algorithm requires at least four.
 
         if ([array count] < 4) {
-            [self autorelease];
+            
             return nil;
         }
 
         mCalculationDone = NO;
-        mInput = [array retain];
+        mInput = array;
         mAnnealingSteps = kDKDefaultAnnealingSteps;
 
         // prepare for the computation by allocating C arrays and populating them from the input.
@@ -217,7 +217,7 @@ static DKRouteAlgorithmType s_Algorithm = kDKUseNearestNeighbour; //kDKUseSimula
                     mX[k] = [val pointValue].x;
                     mY[k] = [val pointValue].y;
                 } else {
-                    [self autorelease];
+                    
                     [NSException raise:NSInternalInconsistencyException
                                 format:@"NSValue passed did not contain NSPoint"];
                 }
@@ -232,8 +232,8 @@ static DKRouteAlgorithmType s_Algorithm = kDKUseNearestNeighbour; //kDKUseSimula
 
 - (void)dealloc
 {
-    [mInput release];
-    [mVisited release];
+    
+    
 
     if (mX)
         free(mX);
@@ -372,7 +372,7 @@ static DKRouteAlgorithmType s_Algorithm = kDKUseNearestNeighbour; //kDKUseSimula
         mOrder[++k] = [points indexOfObject:[mVisited lastObject]] + 1;
     } while ([workingList count] > 0);
 
-    [workingList release];
+    
     [self notifyProgress:1.0];
 
     // mVisited is the sorted list of original points
