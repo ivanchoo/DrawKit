@@ -137,7 +137,7 @@ static inline NSUInteger childNodeAtIndex(NSUInteger nodeIndex)
 
         NSAssert1([obj index] == indx, @"index mismatch when removing object from storage, obj = %@", obj);
 
-        [obj retain];
+        
 
         [super removeObjectFromObjectsAtIndex:indx];
         [self renumberObjectsFromIndex:indx];
@@ -147,7 +147,7 @@ static inline NSUInteger childNodeAtIndex(NSUInteger nodeIndex)
             [mTree removeItem:obj
                      withRect:[obj bounds]];
 
-        [obj release];
+        
     }
 }
 
@@ -249,12 +249,12 @@ static inline NSUInteger childNodeAtIndex(NSUInteger nodeIndex)
 
 - (void)object:(id<DKStorableObject>)obj didChangeBoundsFrom:(NSRect)oldBounds
 {
-    [obj retain];
+    
     [mTree removeItem:obj
              withRect:oldBounds];
     [mTree insertItem:obj
              withRect:[obj bounds]];
-    [obj release];
+    
 }
 
 - (void)setCanvasSize:(NSSize)size
@@ -264,15 +264,15 @@ static inline NSUInteger childNodeAtIndex(NSUInteger nodeIndex)
     // then set them again to reload the tree.
 
     if (!NSEqualSizes(size, [mTree canvasSize])) {
-        NSArray* objects = [[self objects] retain];
+        NSArray* objects = [self objects];
         NSUInteger depth = (mTreeDepth == 0 ? depthForObjectCount([objects count]) : mTreeDepth);
 
-        [mTree release];
+        
         mTree = [[DKBSPDirectTree alloc] initWithCanvasSize:size
                                                       depth:MAX(depth, kDKMinimumDepth)];
 
         [self setObjects:objects];
-        [objects release];
+        
     }
 }
 
@@ -306,7 +306,7 @@ static NSComparisonResult zComparisonFunc(id<DKStorableObject> a, id<DKStorableO
 
 static void renumberFunc(const void* value, void* context)
 {
-    id<DKStorableObject> obj = (id<DKStorableObject>)value;
+    id<DKStorableObject> obj = (__bridge id<DKStorableObject>)value;
     [obj setIndex:*(NSUInteger*)context];
     (*(NSUInteger*)context)++;
 }
@@ -314,7 +314,7 @@ static void renumberFunc(const void* value, void* context)
 static void unmarkFunc(const void* value, void* context)
 {
 #pragma unused(context)
-    [(id<DKStorableObject>)value setMarked:NO];
+    [(__bridge id<DKStorableObject>)value setMarked:NO];
 }
 
 - (void)renumberObjectsFromIndex:(NSUInteger)indx
@@ -424,11 +424,6 @@ static void unmarkFunc(const void* value, void* context)
     return self;
 }
 
-- (void)dealloc
-{
-    [mTree release];
-    [super dealloc];
-}
 
 - (id)initWithCoder:(NSCoder*)coder
 {
@@ -437,7 +432,7 @@ static void unmarkFunc(const void* value, void* context)
     mTreeDepth = [coder decodeIntegerForKey:@"DKBSPDirectStorage_treeDepth"];
     [self setCanvasSize:[coder decodeSizeForKey:@"DKBSPDirectStorage_canvasSize"]];
     mAutoRebuild = YES;
-    [super initWithCoder:coder];
+    if (!(self = [super initWithCoder:coder])) return nil;
 
     return self;
 }
@@ -593,10 +588,10 @@ static void unmarkFunc(const void* value, void* context)
 
 static void addValueToFoundObjects(const void* value, void* context)
 {
-    id<DKStorableObject> obj = (id<DKStorableObject>)value;
+    id<DKStorableObject> obj = (__bridge id<DKStorableObject>)value;
 
     if (![obj isMarked] && [obj visible]) {
-        DKBSPDirectTree* tree = (DKBSPDirectTree*)context;
+        DKBSPDirectTree* tree = (__bridge DKBSPDirectTree*)context;
         NSView* view = tree->mViewRef;
 
         // double-check that the view really needs to draw this
@@ -623,7 +618,7 @@ static void addValueToFoundObjects(const void* value, void* context)
 
     case kDKOperationAccumulate: {
 #if USE_CF_APPLIER
-        CFArrayApplyFunction((CFArrayRef)leaf, CFRangeMake(0, [leaf count]), addValueToFoundObjects, self);
+        CFArrayApplyFunction((CFArrayRef)leaf, CFRangeMake(0, [leaf count]), addValueToFoundObjects, (__bridge void *)(self));
 #else
         NSEnumerator* iter = [leaf objectEnumerator];
         id<DKStorableObject> anObject;
@@ -661,11 +656,6 @@ static void addValueToFoundObjects(const void* value, void* context)
 #pragma mark -
 #pragma mark - as a NSObject
 
-- (void)dealloc
-{
-    [mFoundObjects release];
-    [super dealloc];
-}
 
 - (NSString*)description
 {

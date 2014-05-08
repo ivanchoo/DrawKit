@@ -172,7 +172,7 @@ static BOOL sSubstitute = NO;
         [style addRenderer:stroke];
     }
 
-    return [style autorelease];
+    return style;
 }
 
 /** @brief Creates a style from data on the pasteboard
@@ -206,7 +206,7 @@ static BOOL sSubstitute = NO;
     static NSArray* spTypes = nil;
 
     if (spTypes == nil)
-        spTypes = [[NSArray arrayWithObjects:kDKStyleKeyPasteboardType, kDKStylePasteboardType, nil] retain];
+        spTypes = [NSArray arrayWithObjects:kDKStyleKeyPasteboardType, kDKStylePasteboardType, nil];
 
     return spTypes;
 }
@@ -292,7 +292,7 @@ static BOOL sSubstitute = NO;
     [shadw setShadowBlurRadius:10.0];
     [shadw setShadowOffset:NSMakeSize(6, 6)];
 
-    return [shadw autorelease];
+    return shadw;
 }
 
 /** @brief Set whether shadow attributes within a style should be drawn
@@ -472,7 +472,7 @@ static BOOL sSubstitute = NO;
         [[[self undoManager] prepareWithInvocationTarget:self] setTextAttributes:[self textAttributes]];
         [self notifyClientsBeforeChange];
         NSDictionary* temp = [attrs copy];
-        [m_textAttributes release];
+        
         m_textAttributes = temp;
         [self notifyClientsAfterChange];
         [[NSNotificationCenter defaultCenter] postNotificationName:kDKStyleTextAttributesDidChangeNotification
@@ -597,7 +597,7 @@ static BOOL sSubstitute = NO;
  */
 - (NSString*)uniqueKey
 {
-    return [[m_uniqueKey copy] autorelease];
+    return [m_uniqueKey copy];
 }
 
 /** @brief Sets the unique key of the style
@@ -611,7 +611,7 @@ static BOOL sSubstitute = NO;
     NSAssert(m_uniqueKey == nil, @"unique key already assigned - cannot be changed");
 
     if (m_uniqueKey == nil) {
-        m_uniqueKey = [[DKUniqueID uniqueKey] retain];
+        m_uniqueKey = [DKUniqueID uniqueKey];
         //	LogEvent_(kStateEvent, @"assigned unique key: %@", m_uniqueKey);
     }
 }
@@ -928,7 +928,7 @@ static BOOL sSubstitute = NO;
                 [style addRenderer:adorn];
             }
 
-            [image release];
+            
             wasMutated = YES;
         }
     }
@@ -969,11 +969,11 @@ static BOOL sSubstitute = NO;
     }
 
     if (wasMutated)
-        return [style autorelease];
+        return style;
     else {
         // nothing was done, so return self to avoid unwanted cloning of the style
 
-        [style release];
+        
         return self;
     }
 }
@@ -1117,7 +1117,7 @@ static BOOL sSubstitute = NO;
 
         [ta drawInRect:r];
 
-        [example release];
+        
 
         //[example drawInRect:r withAttributes:[self textAttributes]];
     }
@@ -1133,7 +1133,7 @@ static BOOL sSubstitute = NO;
         [mSwatchCache setObject:image
                          forKey:cacheKey];
 
-    return [image autorelease];
+    return image;
 }
 
 /** @brief Creates a thumbnail image of the style
@@ -1258,10 +1258,10 @@ static BOOL sSubstitute = NO;
     while ((rast = [iter nextObject])) {
         rast = [rast copy];
         [newStyle addRenderer:rast];
-        [rast release];
+        
     }
 
-    return [newStyle autorelease];
+    return newStyle;
 }
 
 /** @brief Returns a new style formed by copying the rasterizers from the receiver but not those of <aClass>
@@ -1270,7 +1270,7 @@ static BOOL sSubstitute = NO;
  */
 - (DKStyle*)styleByRemovingRenderersOfClass:(Class)aClass
 {
-    DKStyle* newStyle = [[self mutableCopy] autorelease];
+    DKStyle* newStyle = [self mutableCopy];
 
     [newStyle removeRenderersOfClass:aClass
                          inSubgroups:YES];
@@ -1287,7 +1287,7 @@ static BOOL sSubstitute = NO;
 {
     DKStyle* clone = [self mutableCopy];
     [clone setName:[self name]];
-    return [clone autorelease];
+    return clone;
 }
 
 #pragma mark -
@@ -1399,9 +1399,7 @@ static BOOL sSubstitute = NO;
         return;
 
     if ([self enabled]) {
-        NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-        if (![[self class] shouldAntialias] && [NSGraphicsContext currentContextDrawingToScreen]) {
+        @autoreleasepool { if (![[self class] shouldAntialias] && [NSGraphicsContext currentContextDrawingToScreen]) {
             [[NSGraphicsContext currentContext] setShouldAntialias:NO];
             [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationNone];
         }
@@ -1421,9 +1419,7 @@ static BOOL sSubstitute = NO;
 
             NSLog(@"An exception occurred while rendering the style - PLEASE FIX - %@. Exception = %@", self, exception);
         }
-        m_renderClientRef = nil;
-
-        [pool drain];
+        m_renderClientRef = nil; }
     }
 }
 
@@ -1493,11 +1489,10 @@ static BOOL sSubstitute = NO;
     [[self renderList] makeObjectsPerformSelector:@selector(tearDownKVOForObserver:)
                                        withObject:self];
 
-    [mSwatchCache release];
-    [m_textAttributes release];
-    [m_uniqueKey release];
+    
+    
+    
 
-    [super dealloc];
 }
 
 - (id)init
@@ -1517,7 +1512,6 @@ static BOOL sSubstitute = NO;
         m_clientCount = 0;
 
         if (m_uniqueKey == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -1585,7 +1579,7 @@ static BOOL sSubstitute = NO;
             m_lastModTime = [NSDate timeIntervalSinceReferenceDate];
             m_mergeFlag = NO;
         } else {
-            m_uniqueKey = [uk retain];
+            m_uniqueKey = uk;
 
             // do not re-register styles immediately. Instead, just flag them as needing a potential remerge with the
             // registry. The user might have other ideas - the document is able to handle the remerge of a document's styles
@@ -1622,7 +1616,7 @@ static BOOL sSubstitute = NO;
 - (id)copyWithZone:(NSZone*)zone
 {
     if ([self isStyleSharable])
-        return [self retain];
+        return self;
     else
         return [self mutableCopyWithZone:zone];
 }
@@ -1690,7 +1684,7 @@ static BOOL sSubstitute = NO;
     NSDictionary* attribs = [[self textAttributes] deepCopy];
 
     [copy setTextAttributes:attribs];
-    [attribs release];
+    
 
     // the copy needs to start observing all of its components:
 

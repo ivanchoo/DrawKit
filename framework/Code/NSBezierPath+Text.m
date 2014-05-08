@@ -47,7 +47,7 @@ static NSString* kDKTextOnPathTextFittedCacheKey = @"DKTextOnPathTextFitted";
         topLayoutMgr = [[NSLayoutManager alloc] init];
         NSTextContainer* tc = [[NSTextContainer alloc] initWithContainerSize:NSMakeSize(1.0e6, 1.0e6)];
         [topLayoutMgr addTextContainer:tc];
-        [tc release];
+        
 
         [topLayoutMgr setUsesScreenFonts:NO];
     }
@@ -66,8 +66,8 @@ static NSDictionary* s_TOPTextAttributes = nil;
     if (s_TOPTextAttributes == nil) {
         NSFont* font = [NSFont fontWithName:@"Helvetica"
                                        size:12.0];
-        s_TOPTextAttributes = [[NSDictionary dictionaryWithObject:font
-                                                           forKey:NSFontAttributeName] retain];
+        s_TOPTextAttributes = [NSDictionary dictionaryWithObject:font
+                                                           forKey:NSFontAttributeName];
     }
 
     return s_TOPTextAttributes;
@@ -79,8 +79,8 @@ static NSDictionary* s_TOPTextAttributes = nil;
  @param attrs a dictionary of text attributes */
 + (void)setTextOnPathDefaultAttributes:(NSDictionary*)attrs
 {
-    [attrs retain];
-    [s_TOPTextAttributes release];
+    
+    
     s_TOPTextAttributes = attrs;
 }
 
@@ -163,7 +163,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
                          usingLayoutHelper:gd
                              layoutManager:lm
                                      cache:cache];
-    [gd release];
+    
 
     // draw strikethrough attributes based on the original string
 
@@ -208,7 +208,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
                                                              attributes:attrs];
     BOOL result = [self drawTextOnPath:as
                                yOffset:0];
-    [as release];
+    
 
     return result;
 }
@@ -248,7 +248,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
 {
     // returns the laid out glyphs as an array of separate paths
 
-    DKTextOnPathGlyphAccumulator* ga = [[[DKTextOnPathGlyphAccumulator alloc] init] autorelease];
+    DKTextOnPathGlyphAccumulator* ga = [[DKTextOnPathGlyphAccumulator alloc] init];
     NSLayoutManager* lm = [[self class] textOnPathLayoutManager];
     NSTextStorage* text = [self preadjustedTextStorageWithString:str
                                                    layoutManager:lm];
@@ -289,7 +289,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
                                                              attributes:attrs];
     NSBezierPath* np = [self bezierPathWithTextOnPath:as
                                               yOffset:0];
-    [as release];
+    
     return np;
 }
 
@@ -342,7 +342,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
                                                           forKey:NSParagraphStyleAttributeName];
         [str addAttributes:attrs
                      range:NSMakeRange(0, [str length])];
-        [para release];
+        
     }
 
     NSTextContainer* tc = [[lm textContainers] lastObject];
@@ -372,74 +372,74 @@ static NSDictionary* s_TOPTextAttributes = nil;
         // lay down the glyphs along the path
 
         for (glyphIndex = glyphRange.location; glyphIndex < NSMaxRange(glyphRange); ++glyphIndex) {
-            NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+            @autoreleasepool {
 
-            NSRect lineFragmentRect = [lm lineFragmentRectForGlyphAtIndex:glyphIndex
-                                                           effectiveRange:NULL];
-            NSPoint viewLocation, layoutLocation = [lm locationForGlyphAtIndex:glyphIndex];
+                NSRect lineFragmentRect = [lm lineFragmentRectForGlyphAtIndex:glyphIndex
+                                                               effectiveRange:NULL];
+                NSPoint viewLocation, layoutLocation = [lm locationForGlyphAtIndex:glyphIndex];
 
-            // if this represents anything other than the first line, ignore it
+                // if this represents anything other than the first line, ignore it
 
-            if (lineFragmentRect.origin.y > 0.0) {
-                result = NO;
-                break;
-            }
-
-            gbr = [lm boundingRectForGlyphRange:NSMakeRange(glyphIndex, 1)
-                                inTextContainer:tc];
-            CGFloat half = NSWidth(gbr) * 0.5f;
-
-            // if the character width is zero or -ve, skip it - some control glyphs appear to need suppressing in this way.
-            // Note that this prevents some kinds of accents from getting drawn - need to work out a fix for that.
-
-            if (half > 0) {
-                // get a shortened path that starts at the character location
-
-                temp = [self bezierPathByTrimmingFromLength:NSMinX(lineFragmentRect) + layoutLocation.x + half];
-
-                // if no more room on path, stop laying glyphs
-
-                if ([temp length] < half) {
+                if (lineFragmentRect.origin.y > 0.0) {
                     result = NO;
                     break;
                 }
 
-                [temp elementAtIndex:0
-                    associatedPoints:&viewLocation];
-                CGFloat angle = [temp slopeStartingPath];
+                gbr = [lm boundingRectForGlyphRange:NSMakeRange(glyphIndex, 1)
+                                    inTextContainer:tc];
+                CGFloat half = NSWidth(gbr) * 0.5f;
 
-                // view location needs to be offset vertically normal to the path to account for the baseline
+                // if the character width is zero or -ve, skip it - some control glyphs appear to need suppressing in this way.
+                // Note that this prevents some kinds of accents from getting drawn - need to work out a fix for that.
 
-                baseline = NSHeight(gbr) - [[lm typesetter] baselineOffsetInLayoutManager:lm
-                                                                               glyphIndex:glyphIndex];
+                if (half > 0) {
+                    // get a shortened path that starts at the character location
 
-                viewLocation.x -= baseline * cosf(angle + NINETY_DEGREES);
-                viewLocation.y -= baseline * sinf(angle + NINETY_DEGREES);
+                    temp = [self bezierPathByTrimmingFromLength:NSMinX(lineFragmentRect) + layoutLocation.x + half];
 
-                // view location needs to be projected back along the baseline tangent by half the character width to align
-                // the character based on the middle of the glyph instead of the left edge
+                    // if no more room on path, stop laying glyphs
 
-                viewLocation.x -= half * cosf(angle);
-                viewLocation.y -= half * sinf(angle);
+                    if ([temp length] < half) {
+                        result = NO;
+                        break;
+                    }
 
-                // cache the glyph positioning information to avoid recalculation next time round
+                    [temp elementAtIndex:0
+                        associatedPoints:&viewLocation];
+                    CGFloat angle = [temp slopeStartingPath];
 
-                posInfo = [[DKPathGlyphInfo alloc] initWithGlyphIndex:glyphIndex
-                                                             position:viewLocation
-                                                                slope:angle];
-                [newGlyphCache addObject:posInfo];
-                [posInfo release];
+                    // view location needs to be offset vertically normal to the path to account for the baseline
 
-                // call the helper object to finish off what we intend to do with this glyph
+                    baseline = NSHeight(gbr) - [[lm typesetter] baselineOffsetInLayoutManager:lm
+                                                                                   glyphIndex:glyphIndex];
 
-                [helperObject layoutManager:lm
-                      willPlaceGlyphAtIndex:glyphIndex
-                                 atLocation:viewLocation
-                                  pathAngle:angle
-                                    yOffset:dy];
+                    viewLocation.x -= baseline * cosf(angle + NINETY_DEGREES);
+                    viewLocation.y -= baseline * sinf(angle + NINETY_DEGREES);
+
+                    // view location needs to be projected back along the baseline tangent by half the character width to align
+                    // the character based on the middle of the glyph instead of the left edge
+
+                    viewLocation.x -= half * cosf(angle);
+                    viewLocation.y -= half * sinf(angle);
+
+                    // cache the glyph positioning information to avoid recalculation next time round
+
+                    posInfo = [[DKPathGlyphInfo alloc] initWithGlyphIndex:glyphIndex
+                                                                 position:viewLocation
+                                                                    slope:angle];
+                    [newGlyphCache addObject:posInfo];
+                    
+
+                    // call the helper object to finish off what we intend to do with this glyph
+
+                    [helperObject layoutManager:lm
+                          willPlaceGlyphAtIndex:glyphIndex
+                                     atLocation:viewLocation
+                                      pathAngle:angle
+                                        yOffset:dy];
+                }
+
             }
-
-            [pool drain];
         }
 
         [cache setObject:newGlyphCache
@@ -568,7 +568,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
         [self kernText:text
             toFitLength:pathLength];
 
-    return [text autorelease];
+    return text;
 }
 
 #pragma mark -
@@ -680,13 +680,13 @@ static NSDictionary* s_TOPTextAttributes = nil;
         [tempStr removeAttribute:NSSuperscriptAttributeName
                            range:NSMakeRange(0, [tempStr length])];
         [tempStr addLayoutManager:tempLM];
-        [tempLM release];
+        
 
         NSUInteger glyphIndex = [tempLM glyphIndexForCharacterAtIndex:range.location];
         ulOffset = [[tempLM typesetter] baselineOffsetInLayoutManager:tempLM
                                                            glyphIndex:glyphIndex] * -0.5f;
 
-        [tempStr release];
+        
 
         // if the underline metrics aren't set for the font, use an average of those for Times + Helvetica for the same point size. According to Apple that's what
         // they do, though it's not clear if just a value of 0 is considered bad, as there are discrepancies with certain fonts.
@@ -894,7 +894,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
     *start = [mh position];
     *length = [mh length];
 
-    [mh release];
+    
 }
 
 /** @brief Determines the positions of any descender breaks for drawing underlines.
@@ -937,13 +937,13 @@ static NSDictionary* s_TOPTextAttributes = nil;
     CGFloat yOffset = NSHeight(lineFrag) - baseline + fabs(offset);
 
     NSBezierPath* glyphPath = [lm textPath];
-    NSArray* result = [[glyphPath intersectingPointsWithHorizontalLineAtY:yOffset] retain];
+    NSArray* result = [glyphPath intersectingPointsWithHorizontalLineAtY:yOffset];
 
-    [btc release];
-    [lm release];
-    [subString release];
+    
+    
+    
 
-    return [result autorelease];
+    return result;
 }
 
 #define DESCENDER_BREAK_PADDING 3
@@ -1135,7 +1135,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
         distance += interval;
     }
 
-    return [array autorelease];
+    return array;
 }
 
 /** @brief Places objects at regular intervals along the path.
@@ -1240,7 +1240,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
 
         [temp transformUsingAffineTransform:tfm];
         [newPath appendBezierPath:temp];
-        [temp release];
+        
 
         distance += interval;
         ++count;
@@ -1341,7 +1341,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
         prevLink = p;
     }
 
-    return [array autorelease];
+    return array;
 }
 
 #pragma mark -
@@ -1412,7 +1412,7 @@ static NSDictionary* s_TOPTextAttributes = nil;
                                                userInfo:parameters
                                                 repeats:YES];
 
-            [parameters release];
+            
             [[NSRunLoop currentRunLoop] addTimer:t
                                          forMode:NSEventTrackingRunLoopMode];
             [[NSRunLoop currentRunLoop] addTimer:t
@@ -1601,7 +1601,6 @@ static NSInteger SortPointsHorizontally(NSValue* value1, NSValue* value2, void* 
     NSInteger lineCount = (floor(NSHeight(br) / lineHeight)) + 1;
 
     if (lineCount > 0) {
-        NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
         NSArray* previousLine = nil;
         NSArray* currentLine;
         NSInteger i;
@@ -1672,7 +1671,7 @@ static NSInteger SortPointsHorizontally(NSValue* value1, NSValue* value2, void* 
                 }
             }
         }
-        [pool release];
+        
     }
 
     return result;
@@ -1801,7 +1800,7 @@ static NSInteger SortPointsHorizontally(NSValue* value1, NSValue* value2, void* 
     // add the transformed glyph
 
     [mGlyphs addObject:glyphTemp];
-    [glyphTemp release];
+    
 }
 
 - (id)init
@@ -1813,11 +1812,6 @@ static NSInteger SortPointsHorizontally(NSValue* value1, NSValue* value2, void* 
     return self;
 }
 
-- (void)dealloc
-{
-    [mGlyphs release];
-    [super dealloc];
-}
 
 @end
 

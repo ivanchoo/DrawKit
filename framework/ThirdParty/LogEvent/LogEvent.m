@@ -306,8 +306,8 @@ void LogLoggingState(NSArray* eventTypeNames)
 {
 	if (eventTypes != mEventTypes)
 	{
-		[mEventTypes release];
-		mEventTypes = [eventTypes retain];
+		
+		mEventTypes = eventTypes;
 	}
 	InitializePrefsForEventTypeNames();
 }
@@ -318,14 +318,14 @@ void LogLoggingState(NSArray* eventTypeNames)
 	{
 		[self loadNib];
 		
-		NSDictionary* eventTypes = [[self newEventTypes] autorelease];
+		NSDictionary* eventTypes = [self newEventTypes];
 		
 		NSAssert(eventTypes != nil, @"Expected valid eventTypes");
 		[self setEventTypes:eventTypes];
 	}
 	NSAssert(mEventTypes != nil, @"Expected valid mEventTypes");
 	
-	return [[mEventTypes retain] autorelease];
+	return mEventTypes;
 }
 
 
@@ -384,7 +384,7 @@ void LogLoggingState(NSArray* eventTypeNames)
 #pragma mark -
 - (NSDictionary*)newEventTypes
 {
-	NSMutableDictionary* eventTypes = [[[NSMutableDictionary alloc] initWithCapacity:kNumStandardEventTypes] autorelease];
+	NSMutableDictionary* eventTypes = [[NSMutableDictionary alloc] initWithCapacity:kNumStandardEventTypes];
 	
 	NSAssert(eventTypes != nil, @"Expected valid eventTypes");
 	unsigned i = 0;
@@ -548,7 +548,7 @@ void LogLoggingState(NSArray* eventTypeNames)
 		const char* executablePath = [execPath UTF8String];
 		
 		FSPathMakeRef((UInt8*) executablePath, &fileRef, nil);
-		LSApplicationParameters appParameters = {0, kLSLaunchDefaults | kLSLaunchNewInstance, &fileRef, nil, (CFDictionaryRef)environment, nil, nil};
+		LSApplicationParameters appParameters = {0, kLSLaunchDefaults | kLSLaunchNewInstance, &fileRef, nil, (__bridge CFDictionaryRef)environment, nil, nil};
 		
 		LSOpenApplication(&appParameters, nil);
 		
@@ -581,11 +581,6 @@ void LogLoggingState(NSArray* eventTypeNames)
 	return nil; // On subsequent allocation attempts, a singleton returns nil.
 }
 
-- (id)autorelease
-{
-	return self; // Singleton's cannot be autoreleased.
-}
-
 - (id)copyWithZone:(NSZone*)zone
 {
 #pragma unused (zone)
@@ -594,26 +589,11 @@ void LogLoggingState(NSArray* eventTypeNames)
 
 - (void)dealloc
 {
-	[mEventTypes release];
 	
-	[super dealloc];
+	
 	sSharedLoggingController = nil;
 }
 
-- (id)retain
-{
-	return self; // Singleton's do not modify their retain count.
-}
-
-- (unsigned)retainCount
-{
-	return UINT_MAX; // Denotes an object, such as a singleton, that cannot be released.
-}
-
-- (void)release
-{
-	// Singleton's do nothing.
-}
 
 @end
 #endif /* defined(qUseLogEvent) */

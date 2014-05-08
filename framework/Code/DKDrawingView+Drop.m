@@ -8,6 +8,7 @@
 
 #import "DKDrawingView+Drop.h"
 #import "DKObjectOwnerLayer.h"
+#import "DKViewController.h"
 
 extern DKDrawingView* sCurDView;
 

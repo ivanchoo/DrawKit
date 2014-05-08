@@ -13,8 +13,8 @@
 #pragma mark As a DKExpression
 - (void)setType:(NSString*)aType
 {
-    [aType retain];
-    [mType release];
+    
+    
     mType = aType;
 }
 
@@ -117,7 +117,7 @@
                                                              value:aValue];
 
     [mValues addObject:pair];
-    [pair release];
+    
 }
 
 #pragma mark -
@@ -171,8 +171,8 @@
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [mValues release];
-    [mType release];
+    
+    
 
     [super dealloc];
 }
@@ -218,7 +218,6 @@
 
         if (mType == nil
             || mValues == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -233,8 +232,8 @@
 - (id)initWithKey:(NSString*)aKey value:(id)aValue
 {
     if ((self = [super init]) != nil) {
-        key = [aKey retain];
-        value = [aValue retain];
+        key = aKey;
+        value = aValue;
     }
     return self;
 }
@@ -251,8 +250,8 @@
 
 - (void)setValue:(id)val
 {
-    [val retain];
-    [value release];
+    
+    
     value = val;
 }
 
@@ -265,8 +264,8 @@
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [key release];
-    [value release];
+    
+    
     [super dealloc];
 }
 

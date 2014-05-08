@@ -1,3 +1,18 @@
+WildThink Updates
+=================
+
+Working of uplifting DrawKit to use ARC
+
+First Step
+Run the tops script on all the .m files
+
+	find . -name "*.m" -exec tops -scriptfile uplift.tops {} \;
+
+At this point the framework will build but NOT have an error-free Xcode
+conversion to ARC.
+
+Tag => "tops-complete"
+
 DrawKit
 =======
 

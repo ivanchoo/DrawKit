@@ -32,7 +32,7 @@ that need to be implemented correctly for a subclass to work fully correctly wit
 The user info is a dictionary attached to an object. It plays no part in the graphics system, but can be used by applications
 to attach arbitrary data to any drawable object.
 */
-@interface DKDrawableObject : NSObject <DKStorableObject, DKRenderable, NSCoding, NSCopying> {
+@interface DKDrawableObject : NSObject <DKStorableObject, DKRenderable, NSCoding, NSCopying, NSDraggingDestination> {
 @private
     id<DKDrawableContainer> mContainerRef; // the immediate container of this object (layer, group or another drawable)
     DKStyle* m_style; // the drawing style attached

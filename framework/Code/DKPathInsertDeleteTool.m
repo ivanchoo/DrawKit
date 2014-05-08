@@ -24,7 +24,7 @@ NSString* kDKDeletePathElementCursorImageName = @"Delete Path Element";
     DKPathInsertDeleteTool* tool = [[DKPathInsertDeleteTool alloc] init];
 
     [tool setMode:kDKPathDeletePointMode];
-    return [tool autorelease];
+    return tool;
 }
 
 + (DKDrawingTool*)pathInsertionTool
@@ -32,7 +32,7 @@ NSString* kDKDeletePathElementCursorImageName = @"Delete Path Element";
     DKPathInsertDeleteTool* tool = [[DKPathInsertDeleteTool alloc] init];
 
     [tool setMode:kDKPathInsertPointMode];
-    return [tool autorelease];
+    return tool;
 }
 
 + (DKDrawingTool*)pathElementDeletionTool
@@ -40,7 +40,7 @@ NSString* kDKDeletePathElementCursorImageName = @"Delete Path Element";
     DKPathInsertDeleteTool* tool = [[DKPathInsertDeleteTool alloc] init];
 
     [tool setMode:kDKPathDeleteElementMode];
-    return [tool autorelease];
+    return tool;
 }
 
 #pragma mark -
@@ -104,7 +104,7 @@ NSString* kDKDeletePathElementCursorImageName = @"Delete Path Element";
 
     NSCursor* curs = [[NSCursor alloc] initWithImage:img
                                              hotSpot:NSMakePoint(1, 1)];
-    return [curs autorelease];
+    return curs;
 }
 
 - (NSInteger)mouseDownAtPoint:(NSPoint)p targetObject:(DKDrawableObject*)obj layer:(DKLayer*)layer event:(NSEvent*)event delegate:(id)aDel

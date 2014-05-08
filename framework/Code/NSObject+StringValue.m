@@ -83,7 +83,7 @@
     if ([sv length] > 0)
         [sv deleteCharactersInRange:NSMakeRange([sv length] - 1, 1)];
 
-    return [sv autorelease];
+    return sv;
 }
 
 @end
@@ -105,7 +105,7 @@
     if ([sv length] > 0)
         [sv deleteCharactersInRange:NSMakeRange([sv length] - 1, 1)];
 
-    return [sv autorelease];
+    return sv;
 }
 
 @end
@@ -125,7 +125,7 @@
     if ([sv length] > 0)
         [sv deleteCharactersInRange:NSMakeRange([sv length] - 1, 1)];
 
-    return [sv autorelease];
+    return sv;
 }
 
 @end

@@ -53,7 +53,7 @@
     [hatch setSpacing:spacing];
     [hatch setAngle:angle];
 
-    return [hatch autorelease];
+    return hatch;
 }
 
 /** @brief Return a hatching which implements a dot pattern
@@ -189,7 +189,7 @@
             NSBezierPath* roughHatch;
 
             if (mRoughenedCache == nil)
-                mRoughenedCache = [[m_cache bezierPathWithRoughenedStrokeOutline:[self roughness] * [self width]] retain];
+                mRoughenedCache = [m_cache bezierPathWithRoughenedStrokeOutline:[self roughness] * [self width]];
 
             if (oa != 0.0)
                 roughHatch = [xform transformBezierPath:mRoughenedCache];
@@ -330,8 +330,8 @@
 #pragma mark -
 - (void)setColour:(NSColor*)colour
 {
-    [colour retain];
-    [m_hatchColour release];
+    
+    
     m_hatchColour = colour;
 }
 
@@ -343,8 +343,8 @@
 #pragma mark -
 - (void)setDash:(DKStrokeDash*)dash
 {
-    [dash retain];
-    [m_hatchDash release];
+    
+    
     m_hatchDash = dash;
     [self invalidateRoughnessCache];
 }
@@ -366,7 +366,7 @@
                    count:2];
 
     [self setDash:dash];
-    [dash release];
+    
 }
 
 - (void)setRoughness:(CGFloat)amount
@@ -395,7 +395,7 @@
 #pragma mark -
 - (void)invalidateCache
 {
-    [m_cache release];
+    
     m_cache = nil;
     [self invalidateRoughnessCache];
 }
@@ -407,7 +407,7 @@
     // calculating where to start and end each line.
 
     if (m_cache == nil) {
-        m_cache = [[NSBezierPath bezierPath] retain];
+        m_cache = [NSBezierPath bezierPath];
 
         NSRect cr;
 
@@ -447,7 +447,7 @@
 
 - (void)invalidateRoughnessCache
 {
-    [mRoughenedCache release];
+    
     mRoughenedCache = nil;
 }
 
@@ -498,11 +498,10 @@
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [m_hatchDash release];
-    [m_hatchColour release];
+    
+    
     [self invalidateCache];
 
-    [super dealloc];
 }
 
 - (id)init

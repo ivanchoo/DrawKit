@@ -22,8 +22,8 @@
 
 - (void)setGreekingColour:(NSColor*)aColour
 {
-    [aColour retain];
-    [mGreekingColour release];
+    
+    
     mGreekingColour = aColour;
 }
 
@@ -124,10 +124,5 @@
     return self;
 }
 
-- (void)dealloc
-{
-    [mGreekingColour release];
-    [super dealloc];
-}
 
 @end

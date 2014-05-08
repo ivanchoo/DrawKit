@@ -1,0 +1,49 @@
+/*
+ autorelease
+*/
+
+replace "[<target> autorelease]; <target> = nil;" with "<target> = nil;"
+
+replace "<new> = [<old> autorelease];" with "<new> = <old>;"
+
+replace "return [<target> autorelease]" with "return <target>"
+
+replace "= [<target> autorelease]" with "= <target>"
+
+replace ": [<target> autorelease];" with ": <target>;"
+
+/*
+    return (CGImageRef)[(NSObject*)image autorelease];
+*/
+
+replace "return <a ret> [(<cast>*) <target> autorelease];"
+	with "return <ret> (<cast>*) <target>;"
+
+replace "[<target> autorelease];" with ""
+
+/*
+ release
+*/
+
+replace ": [<target> release];" with ": <target>;"
+
+replace "[<target> release];" with ""
+
+/*
+ retain
+*/
+
+replace "= [<target> retain]" with "= <target>"
+
+replace "return [<target> retain]" with "return <target>"
+
+replace "[<target> retain];" with ""
+
+
+/*
+Autorelease pools
+*/
+
+replace "NSAutoreleasePool* pool = [NSAutoreleasePool new];<a body>[pool drain];"
+	with "@autoreleasepool { <body> }"
+

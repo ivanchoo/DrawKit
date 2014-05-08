@@ -93,7 +93,7 @@
     NSImage* image = [[NSImage alloc] initByReferencingFile:path];
     if (image == nil)
         LogEvent_(kWheneverEvent, @"ERROR: Unable to locate Image resource %@", name);
-    return [image autorelease];
+    return image;
 }
 
 @end

@@ -161,7 +161,7 @@ static inline NSInteger elementIndexForPartcode(const NSInteger pc);
         }
     }
 
-    return [newPath autorelease];
+    return newPath;
 }
 
 - (NSBezierPath*)bezierPathByStrippingRedundantElements
@@ -227,7 +227,7 @@ static inline NSInteger elementIndexForPartcode(const NSInteger pc);
     //	LogEvent_(kReactiveEvent,  @"original path = %@", self );
     //	LogEvent_(kReactiveEvent,  @"stripped path = %@", newPath );
 
-    return [newPath autorelease];
+    return newPath;
 }
 
 - (NSBezierPath*)bezierPathByRemovingElementAtIndex:(NSInteger)indx

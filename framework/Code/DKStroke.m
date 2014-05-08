@@ -18,7 +18,7 @@
 #pragma mark As a DKStroke
 + (DKStroke*)defaultStroke
 {
-    return [[[self alloc] init] autorelease];
+    return [[self alloc] init];
 }
 
 + (DKStroke*)strokeWithWidth:(CGFloat)width colour:(NSColor*)colour
@@ -28,7 +28,7 @@
     [stroke setWidth:width];
     [stroke setColour:colour];
 
-    return [stroke autorelease];
+    return stroke;
 }
 
 #pragma mark -
@@ -45,7 +45,6 @@
         m_trimLength = 0.0;
 
         if (m_colour == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -57,8 +56,8 @@
 {
     //LogEvent_(kReactiveEvent, @"stroke setting colour: %@", colour);
 
-    [colour retain];
-    [m_colour release];
+    
+    
     m_colour = colour;
 }
 
@@ -122,8 +121,8 @@
 #pragma mark -
 - (void)setDash:(DKStrokeDash*)dash
 {
-    [dash retain];
-    [m_dash release];
+    
+    
     m_dash = dash;
 }
 
@@ -144,7 +143,7 @@
                    count:2];
 
     [self setDash:dash];
-    [dash release];
+    
 }
 
 #pragma mark -
@@ -161,8 +160,8 @@
 #pragma mark -
 - (void)setShadow:(NSShadow*)shadw
 {
-    [shadw retain];
-    [m_shadow release];
+    
+    
     m_shadow = shadw;
 }
 
@@ -294,14 +293,6 @@
 
 #pragma mark -
 #pragma mark As an NSObject
-- (void)dealloc
-{
-    [m_shadow release];
-    [m_dash release];
-    [m_colour release];
-
-    [super dealloc];
-}
 
 - (id)init
 {
@@ -347,7 +338,7 @@
     if ([self trimLength] > 0.0)
         pc = [path bezierPathByTrimmingFromBothEnds:[self trimLength]];
     else
-        pc = [[path copy] autorelease];
+        pc = [path copy];
 
     if (mLateralOffset != 0.0) {
         // make a parallel copy of the path
@@ -431,7 +422,7 @@
 
         DKStrokeDash* dash = [[coder decodeObjectForKey:@"dash"] copy];
         [self setDash:dash];
-        [dash release];
+        
 
         [self setShadow:[coder decodeObjectForKey:@"stroke_shadow"]];
         [self setLineCapStyle:[coder decodeIntegerForKey:@"cap_style"]];
@@ -462,11 +453,11 @@
 
     DKStrokeDash* dashCopy = [[self dash] copyWithZone:zone];
     [cp setDash:dashCopy];
-    [dashCopy release];
+    
 
     NSShadow* shcopy = [[self shadow] copyWithZone:zone];
     [cp setShadow:shcopy];
-    [shcopy release];
+    
 
     [cp setLineCapStyle:[self lineCapStyle]];
     [cp setLineJoinStyle:[self lineJoinStyle]];

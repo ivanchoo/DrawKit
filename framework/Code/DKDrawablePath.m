@@ -51,7 +51,7 @@ static NSColor* sInfoWindowColour = nil;
 {
     DKDrawablePath* dp = [[self alloc] initWithBezierPath:path];
 
-    return [dp autorelease];
+    return dp;
 }
 
 //*********************************************************************************************************************
@@ -67,7 +67,7 @@ static NSColor* sInfoWindowColour = nil;
 {
     DKDrawablePath* dp = [[self alloc] initWithBezierPath:path
                                                     style:aStyle];
-    return [dp autorelease];
+    return dp;
 }
 
 //*********************************************************************************************************************
@@ -77,8 +77,8 @@ static NSColor* sInfoWindowColour = nil;
  */
 + (void)setInfoWindowBackgroundColour:(NSColor*)colour
 {
-    [colour retain];
-    [sInfoWindowColour release];
+    
+    
     sInfoWindowColour = colour;
 }
 
@@ -179,10 +179,10 @@ static NSColor* sInfoWindowColour = nil;
         [[self undoManager] registerUndoWithTarget:self
                                           selector:@selector(setPath:)
                                             object:oldPath];
-        [oldPath release];
+        
 
-        [m_path release];
-        m_path = [path retain];
+        
+        m_path = path;
 
         [self notifyVisualChange];
         [self notifyGeometryChange:oldBounds];
@@ -401,7 +401,7 @@ static NSColor* sInfoWindowColour = nil;
 
 - (void)recordPathForUndo
 {
-    [m_undoPath release];
+    
     m_undoPath = [[self path] copy];
 }
 
@@ -412,7 +412,7 @@ static NSColor* sInfoWindowColour = nil;
 
 - (void)clearUndoPath
 {
-    [m_undoPath release];
+    
     m_undoPath = nil;
 }
 
@@ -431,7 +431,7 @@ static NSColor* sInfoWindowColour = nil;
 
     [path appendBezierPath:[anotherPath path]];
     [self setPath:path];
-    [path release];
+    
 }
 
 /** @brief Preflights a potential join to determine if the join would be made
@@ -616,7 +616,7 @@ static NSColor* sInfoWindowColour = nil;
                 }
 
                 [self setPath:newPath];
-                [newPath release];
+                
 
                 return result;
             }
@@ -655,7 +655,7 @@ static NSColor* sInfoWindowColour = nil;
         }
     }
 
-    return [newObjects autorelease];
+    return newObjects;
 }
 
 /** @brief Splits a path into two paths at a specific point
@@ -686,7 +686,7 @@ static NSColor* sInfoWindowColour = nil;
             [path addUserInfo:[self userInfo]];
             [path setGhosted:[self isGhosted]];
 
-            return [path autorelease];
+            return path;
         }
     }
 
@@ -1276,7 +1276,7 @@ finish:
     DKStyle* savedStyle = nil;
     NSString* abbrUnits = [[self drawing] abbreviatedDrawingUnits];
 
-    savedStyle = [[self style] retain];
+    savedStyle = [self style];
     [self setStyle:[DKStyle styleWithFillColour:nil
                                    strokeColour:[NSColor redColor]
                                     strokeWidth:2.0]];
@@ -1408,7 +1408,7 @@ finish:
 
     [self setPathCreationMode:kDKPathCreateModeEditExisting];
     [self setStyle:savedStyle];
-    [savedStyle release];
+    
     [self notifyVisualChange];
 
     [view mouseUp:theEvent];
@@ -1680,7 +1680,7 @@ finish:
  */
 - (DKDrawableShape*)makeShape
 {
-    NSBezierPath* mp = [[[self path] copy] autorelease];
+    NSBezierPath* mp = [[self path] copy];
 
     Class shapeClass = [DKDrawableObject classForConversionRequestFor:[DKDrawableShape class]];
 
@@ -1714,7 +1714,7 @@ finish:
         [newPath setPath:np];
     }
 
-    return [newPath autorelease];
+    return newPath;
 }
 
 #pragma mark -
@@ -2026,7 +2026,7 @@ finish:
         NSBezierPath* path = [[self path] copy];
         [path closePath];
         [self setPath:path];
-        [path release];
+        
         [[self undoManager] setActionName:NSLocalizedString(@"Close Path", nil)];
     }
 }
@@ -2148,9 +2148,8 @@ finish:
 {
     // stroke the path using the standard selection
 
-    NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-    NSBezierPath* path = [self renderingPath];
+    @autoreleasepool {
+        NSBezierPath* path = [self renderingPath];
 
     [self drawSelectionPath:path];
     [self drawControlPointsOfPath:path
@@ -2161,8 +2160,7 @@ finish:
         [[self path] drawElementsBoundingBoxes];
 
 #endif
-
-    [pool drain];
+    }
 }
 
 /** @brief Draw the ghosted content of the object
@@ -2474,7 +2472,7 @@ finish:
  */
 - (NSBezierPath*)renderingPath
 {
-    NSBezierPath* rPath = [[[self path] copy] autorelease];
+    NSBezierPath* rPath = [[self path] copy];
     NSAffineTransform* parentTransform = [self containerTransform];
 
     if (parentTransform)
@@ -2536,7 +2534,7 @@ finish:
         }
     }
 
-    return [pts autorelease];
+    return pts;
 }
 
 /** @brief Sets the path's bounds to be updated
@@ -2595,7 +2593,7 @@ finish:
     NSBezierPath* path = [[self path] copy];
     [path transformUsingAffineTransform:aTransform];
     [self setPath:path];
-    [path release];
+    
 }
 
 /** @brief Apply the transform to the object
@@ -2610,12 +2608,6 @@ finish:
 
 #pragma mark -
 #pragma mark As an NSObject
-- (void)dealloc
-{
-    [m_path release];
-    [m_undoPath release];
-    [super dealloc];
-}
 
 - (id)init
 {
@@ -2654,7 +2646,7 @@ finish:
     NSBezierPath* pc = [[self path] copyWithZone:zone];
 
     [copy setPath:pc];
-    [pc release];
+    
 
     [copy setPathCreationMode:[self pathCreationMode]];
 

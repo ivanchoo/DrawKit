@@ -100,7 +100,7 @@ NSString* kDKUndoableChangesUserDefaultsKey = @"DKMetadataChangesAreNotUndoable"
         item = [item copy];
         [[self metadata] setObject:item
                             forKey:[key lowercaseString]];
-        [item release];
+        
 
         [self notifyVisualChange];
         [self metadataDidChangeKey:key];
@@ -186,7 +186,7 @@ NSString* kDKUndoableChangesUserDefaultsKey = @"DKMetadataChangesAreNotUndoable"
                 DKMetadataItem* oldItem = [item copy];
                 [[[self undoManager] prepareWithInvocationTarget:self] setMetadataItem:oldItem
                                                                                 forKey:key];
-                [oldItem release];
+                
             }
 
             [self metadataWillChangeKey:key];
@@ -346,7 +346,7 @@ NSString* kDKUndoableChangesUserDefaultsKey = @"DKMetadataChangesAreNotUndoable"
         if ([[self class] metadataChangesAreUndoable]) {
             NSDictionary* mdCopy = [[self metadata] copy];
             [[[self undoManager] prepareWithInvocationTarget:self] setMetadata:mdCopy];
-            [mdCopy release];
+            
         }
 
 #if USE_107_OR_LATER_SCHEMA
@@ -379,7 +379,7 @@ NSString* kDKUndoableChangesUserDefaultsKey = @"DKMetadataChangesAreNotUndoable"
     [self setUserInfoObject:md
                      forKey:kDKMetaDataUserInfoKey];
 #endif
-    [md release];
+    
     [self metadataDidChangeKey:nil];
 }
 
@@ -526,7 +526,7 @@ NSString* kDKUndoableChangesUserDefaultsKey = @"DKMetadataChangesAreNotUndoable"
         metaDict = [[DKMetadataItem dictionaryOfMetadataItemsWithDictionary:metaDict] mutableCopy];
         [self setUserInfoObject:metaDict
                          forKey:kDKMetaDataUserInfo107OrLaterKey];
-        [metaDict release];
+        
 #else
         [self setUserInfoObject:metaDict
                          forKey:kDKMetaDataUserInfoKey];
@@ -538,11 +538,11 @@ NSString* kDKUndoableChangesUserDefaultsKey = @"DKMetadataChangesAreNotUndoable"
         id value;
 
         while ((key = [iter nextObject])) {
-            value = [[metaDict objectForKey:key] retain];
+            value = [metaDict objectForKey:key];
             [metaDict removeObjectForKey:key];
             [metaDict setObject:value
                          forKey:[key lowercaseString]];
-            [value release];
+            
         }
 #endif
         return;
@@ -557,7 +557,7 @@ NSString* kDKUndoableChangesUserDefaultsKey = @"DKMetadataChangesAreNotUndoable"
         [[self userInfo] removeObjectForKey:kDKMetaDataUserInfoKey];
         [self setUserInfoObject:metaDict
                          forKey:kDKMetaDataUserInfo107OrLaterKey];
-        [metaDict release];
+        
     }
 #endif
 }
@@ -585,7 +585,7 @@ NSString* kDKUndoableChangesUserDefaultsKey = @"DKMetadataChangesAreNotUndoable"
         cs ^= [key hash] ^ [value hash];
     }
 
-    [array release];
+    
 
     if ([self container])
         cs ^= [(id)[self container] metadataChecksum];

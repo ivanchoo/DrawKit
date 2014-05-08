@@ -26,8 +26,8 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
 
 + (void)setDelimiterString:(NSString*)delim
 {
-    [delim retain];
-    [sDelimiter release];
+    
+    
     sDelimiter = delim;
 }
 
@@ -41,7 +41,7 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
     static NSMutableCharacterSet* cs = nil;
 
     if (cs == nil) {
-        cs = [[NSMutableCharacterSet characterSetWithCharactersInString:@" ,;:?-()+=*{}[]\"\\<>|!'%/"] retain];
+        cs = [NSMutableCharacterSet characterSetWithCharactersInString:@" ,;:?-()+=*{}[]\"\\<>|!'%/"];
         [cs formUnionWithCharacterSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
     }
 
@@ -54,7 +54,7 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
 {
     NSAttributedString* str = [[NSAttributedString alloc] initWithString:aString];
     self = [self initWithAttributedString:str];
-    [str release];
+    
 
     return self;
 }
@@ -73,10 +73,10 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
 - (void)setMasterString:(NSAttributedString*)master
 {
     if (![master isEqualToAttributedString:[self masterString]]) {
-        NSString* oldString = [[self string] retain];
+        NSString* oldString = [self string];
 
-        [master retain];
-        [mMasterString release];
+        
+        
         mMasterString = master;
 
 // for lazy evaluation, do not process the string immediately. Instead this will be done when the substitutor is asked to
@@ -94,7 +94,7 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
             [mKeys removeAllObjects];
 #endif
 
-        [oldString release];
+        
         [[NSNotificationCenter defaultCenter] postNotificationName:kDKTextSubstitutorNewStringNotification
                                                             object:self];
     }
@@ -110,7 +110,7 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
     NSAttributedString* str = [[NSAttributedString alloc] initWithString:aString
                                                               attributes:attrs];
     [self setMasterString:str];
-    [str release];
+    
 }
 
 - (NSString*)string
@@ -132,7 +132,7 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
     [str fixAttributesInRange:range];
     [str endEditing];
     [self setMasterString:str];
-    [str release];
+    
 }
 
 - (NSDictionary*)attributes
@@ -227,7 +227,7 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
                     DKTextSubstitutionKey* subsKey = [[DKTextSubstitutionKey alloc] initWithKey:key
                                                                                           range:range];
                     [mKeys addObject:subsKey];
-                    [subsKey release];
+                    
                 }
             }
         }
@@ -294,7 +294,7 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
         rangeAdjustment += [subString length] - range.length;
     }
 
-    return [newString autorelease];
+    return newString;
 }
 
 - (NSString*)metadataStringFromObject:(id)object
@@ -329,12 +329,6 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
     return self;
 }
 
-- (void)dealloc
-{
-    [mMasterString release];
-    [mKeys release];
-    [super dealloc];
-}
 
 - (id)initWithCoder:(NSCoder*)coder
 {
@@ -374,7 +368,7 @@ static NSString* sDelimiter = DEFAULT_DELIMITER_STRING;
     static NSCharacterSet* sValidSubkeys = nil;
 
     if (sValidSubkeys == nil)
-        sValidSubkeys = [[NSCharacterSet characterSetWithCharactersInString:@"0123456789ULCEASulceas"] retain];
+        sValidSubkeys = [NSCharacterSet characterSetWithCharactersInString:@"0123456789ULCEASulceas"];
 
     return sValidSubkeys;
 }
@@ -388,8 +382,8 @@ static NSDictionary* s_abbreviationDict = nil;
 
 + (void)setAbbreviationDictionary:(NSDictionary*)abbreviations
 {
-    [abbreviations retain];
-    [s_abbreviationDict release];
+    
+    
     s_abbreviationDict = abbreviations;
 }
 
@@ -398,7 +392,7 @@ static NSDictionary* s_abbreviationDict = nil;
     self = [super init];
     if (self) {
         mRange = aRange;
-        mKey = [key retain];
+        mKey = key;
         [self setPaddingCharacter:@"0"];
 
         // break down non-property keys into any subkeys they may contain
@@ -413,8 +407,8 @@ static NSDictionary* s_abbreviationDict = nil;
                 NSString* str;
                 NSMutableArray* sKeys = [NSMutableArray array];
 
-                [mKey release];
-                mKey = [[iter nextObject] retain];
+                
+                mKey = [iter nextObject];
 
                 while ((str = [iter nextObject])) {
                     if ([str length] == 0)
@@ -581,8 +575,8 @@ static NSDictionary* s_abbreviationDict = nil;
 {
     // set as a string, but only the first character is used
 
-    [padStr retain];
-    [mPadCharacter release];
+    
+    
     mPadCharacter = padStr;
 }
 
@@ -598,12 +592,5 @@ static NSDictionary* s_abbreviationDict = nil;
     return [NSString stringWithFormat:@"key:%@ range = %@", mKey, NSStringFromRange(mRange)];
 }
 
-- (void)dealloc
-{
-    [mKey release];
-    [mSubKeys release];
-    [mPadCharacter release];
-    [super dealloc];
-}
 
 @end

@@ -24,7 +24,7 @@
 
     [cluster setMasterObject:master];
 
-    return [cluster autorelease];
+    return cluster;
 }
 
 #pragma mark -

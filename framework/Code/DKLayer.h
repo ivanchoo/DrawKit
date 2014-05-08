@@ -31,7 +31,7 @@ As layers are retained by the drawing, this does not retain the drawing.
 
 By definition the bounds of the layer is the same as the bounds of the drawing.
 */
-@interface DKLayer : NSObject <NSCoding, DKKnobOwner, NSUserInterfaceValidations> {
+@interface DKLayer : NSObject <NSCoding, DKKnobOwner, NSUserInterfaceValidations, NSDraggingDestination> {
 @private
     NSString* m_name; // layer name
     NSColor* m_selectionColour; // colour preference for selection highlights in this layer

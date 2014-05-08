@@ -153,7 +153,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         [testStorage setTreeDepth:10 + v];
     }
 
-    [testStorage release];
+    
     NSLog(@"testBSPStorage complete.");
 }
 
@@ -243,7 +243,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         [self verifyIndexedStorageIntegrity:testStorage];
     }
 
-    [testStorage release];
+    
     NSLog(@"testIndexedBSPStorage complete.");
 }
 
@@ -267,7 +267,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
 
         [storage insertObject:tso
              inObjectsAtIndex:i];
-        [tso release];
+        
 
         STAssertEqualObjects([tso storage], storage, @"storage back pointer was not correctly assigned");
 
@@ -301,7 +301,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
 
     STAssertEquals([storage countOfObjects], m - numberToDelete, @"deletion failed - number of objects remaining = %d, should be %d", [storage countOfObjects], m - numberToDelete);
 
-    [remIndexSet release];
+    
 }
 
 - (void)insertionTest:(id<DKObjectStorage>)storage canvasSize:(NSSize)canvasSize
@@ -334,7 +334,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
             [tso setBounds:br];
 
             [insertObjects addObject:tso];
-            [tso release];
+            
         }
     }
 
@@ -345,11 +345,11 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
                  atIndexes:remIndexSet];
 
     m += [insertObjects count];
-    [insertObjects release];
+    
 
     STAssertEquals(m, [storage countOfObjects], @"count of objects mismatched, expected %d, got %d", m, [storage countOfObjects]);
 
-    [remIndexSet release];
+    
 }
 
 - (void)replacementTest:(id<DKObjectStorage>)storage canvasSize:(NSSize)canvasSize
@@ -376,7 +376,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         tso = [[testStorableObject alloc] init];
         [tso setBounds:br];
 
-        orig = [[storage objectInObjectsAtIndex:ix] retain];
+        orig = [storage objectInObjectsAtIndex:ix];
         [storage replaceObjectInObjectsAtIndex:ix
                                     withObject:tso];
 
@@ -388,8 +388,8 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         STAssertEqualObjects([tso storage], storage, @"storage back-pointer incorrect after replacement (%@)", [tso storage]);
         STAssertNil([orig storage], @"replaced object does not have a nil back-pointer");
 
-        [orig release];
-        [tso release];
+        
+        
     }
 }
 
@@ -403,9 +403,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
     NSRect retrievalRect;
 
     for (i = 0; i < NUMBER_OF_RETRIEVAL_TESTS; ++i) {
-        NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-        l = randomFloat(0, canvasSize.width);
+        @autoreleasepool { l = randomFloat(0, canvasSize.width);
         t = randomFloat(0, canvasSize.height);
         w = randomFloat(0, canvasSize.width / 2);
         h = randomFloat(0, canvasSize.height / 2);
@@ -461,9 +459,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
 
             STAssertEqualObjects(bruteObject, tso, @"objects at index %d do not match - bf = %@, bsp = %@", j, bruteObject, tso);
             STAssertFalse([tso isMarked], @"retrieved object still has marked flag set, index = %d", j);
-        }
-
-        [pool drain];
+        } }
     }
 
     // a final retrieval test - if the retrieval rect is the whole canvas, number returned should equal entire object count
@@ -475,7 +471,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
                                           options:0];
     STAssertEquals([bspResults count], [objects count], @"object count mismatched when retrieving using the whole canvas size (expected %d, got %d)", [objects count], [bspResults count]);
 
-    [bruteForceSearchResults release];
+    
 }
 
 - (void)pointRetrievalTest:(id<DKObjectStorage>)storage canvasSize:(NSSize)canvasSize
@@ -487,9 +483,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
     CGFloat t, l;
 
     for (i = 0; i < NUMBER_OF_RETRIEVAL_TESTS; ++i) {
-        NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-        l = randomFloat(0, canvasSize.width);
+        @autoreleasepool { l = randomFloat(0, canvasSize.width);
         t = randomFloat(0, canvasSize.height);
         NSPoint retrievalPoint = NSMakePoint(l, t);
 
@@ -537,12 +531,10 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
 
             STAssertEqualObjects(bruteObject, tso, @"objects at index %d do not match - bf = %@, bsp = %@", j, bruteObject, tso);
             STAssertFalse([tso isMarked], @"retrieved object still has marked flag set, index = %d", j);
-        }
-
-        [pool drain];
+        } }
     }
 
-    [bruteForceSearchResults release];
+    
 }
 
 - (void)repositioningTest:(id<DKObjectStorage>)storage canvasSize:(NSSize)canvasSize
@@ -623,8 +615,8 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         dx = [destIndexes indexGreaterThanIndex:dx];
     }
 
-    [srcIndexes release];
-    [destIndexes release];
+    
+    
 }
 
 #pragma mark -
@@ -655,8 +647,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
     NSUInteger foundCount = 0;
 
     while ((tso = [iter nextObject])) {
-        NSAutoreleasePool* pool = [NSAutoreleasePool new];
-        NSEnumerator* leafEnum = [leaves objectEnumerator];
+        @autoreleasepool { NSEnumerator* leafEnum = [leaves objectEnumerator];
 
         while ((leafArray = [leafEnum nextObject])) {
             if ([leafArray containsObject:tso]) {
@@ -665,9 +656,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
             }
         }
         STAssertNotNil([tso storage], @"a storage back-pointer was nil (%@)", tso);
-        STAssertEqualObjects([tso storage], storage, @"a storage back-pointer wasn't pointing to the storage (%@)", tso);
-
-        [pool drain];
+        STAssertEqualObjects([tso storage], storage, @"a storage back-pointer wasn't pointing to the storage (%@)", tso); }
     }
 
     STAssertEquals(foundCount, [storage countOfObjects], @"number of objects in tree is not equal to number in linear storage, expected %d, got %d", [storage countOfObjects], foundCount);
@@ -679,9 +668,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         NSUInteger linIndex = 0;
 
         while ((tso = [iter nextObject])) {
-            NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-            NSEnumerator* leafEnum = [leaves objectEnumerator];
+            @autoreleasepool { NSEnumerator* leafEnum = [leaves objectEnumerator];
             BOOL found = NO;
 
             while ((leafArray = [leafEnum nextObject])) {
@@ -689,9 +676,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
                     found = YES;
                     break;
                 }
-            }
-
-            [pool drain];
+            } }
 
             if (!found) {
 #warning 64BIT: Check formatting arguments
@@ -710,17 +695,13 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
 
     iter = [leaves objectEnumerator];
     while ((leafArray = [iter nextObject])) {
-        NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-        NSEnumerator* leafIter = [leafArray objectEnumerator];
+        @autoreleasepool { NSEnumerator* leafIter = [leafArray objectEnumerator];
         while ((tso = [leafIter nextObject])) {
             STAssertTrue([[storage objects] containsObject:tso], @"an object was present in the tree but not in the linear array: %@ (leaf index = %d)", tso, foundCount);
             STAssertNotNil([tso storage], @"a storage back-pointer was nil (%@)", tso);
             STAssertEquals([tso storage], storage, @"a storage back-pointer wasn't pointing to the storage");
         }
-        ++foundCount;
-
-        [pool drain];
+        ++foundCount; }
     }
 }
 
@@ -754,7 +735,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         ix = [remIndexSet indexGreaterThanIndex:ix];
     }
 
-    [remIndexSet release];
+    
 }
 
 - (void)verifyIndexedStorageIntegrity:(DKBSPObjectStorage*)storage

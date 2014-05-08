@@ -58,7 +58,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
 
         // keep a local copy of the bitmap pointers so that we can set all the planes in one pass of the image
         bmaps[i] = [rep bitmap];
-        [rep release];
+        
 
         pixCounts[i] = 0;
     }
@@ -106,12 +106,12 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
             [rmindexes addIndex:i];
     }
     [bitplanes removeObjectsAtIndexes:rmindexes];
-    [rmindexes release];
+    
 
     // ok, done... the actual trace work is performed when the vector data is requested from the rep. This saves time in case
     // that really we don't want to use all the data.
 
-    return [bitplanes autorelease];
+    return bitplanes;
 }
 
 - (NSArray*)vectorizeToColourWithPrecision:(NSInteger)prec quantizationMethod:(DKColourQuantizationMethod)qm
@@ -169,7 +169,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
         // keep a local copy of the bitmap pointers so that we can set all the planes in one pass of the image
 
         bmaps[i] = [rep bitmap];
-        [rep release];
+        
 
         pixCounts[i] = 0;
 
@@ -210,7 +210,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
 
     // done with the quantizer
 
-    [quant release];
+    
 
     // discard those reps for which no pixels were set (pixcount will be 0)
 
@@ -221,12 +221,12 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
             [rmindexes addIndex:i];
     }
     [bitplanes removeObjectsAtIndexes:rmindexes];
-    [rmindexes release];
+    
 
     // ok, done... the actual trace work is performed when the vector data is requested from the rep. This saves time in case
     // that really we don't want to use all the data.
 
-    return [bitplanes autorelease];
+    return bitplanes;
 }
 
 #pragma mark -
@@ -274,7 +274,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
              fraction:1];
     [NSGraphicsContext restoreGraphicsState];
 
-    return [b8 autorelease];
+    return b8;
 }
 
 - (NSBitmapImageRep*)twentyFourBitImageRep
@@ -322,7 +322,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
              fraction:1];
     [NSGraphicsContext restoreGraphicsState];
 
-    return [b24 autorelease];
+    return b24;
 }
 
 @end
@@ -350,7 +350,6 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
         NSAssert(mColour == nil, @"Expected init to zero");
 
         if (mBits == NULL) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -374,7 +373,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
     if (tp == NULL || tp->curve.n == 0)
         return nil;
 
-    NSBezierPath* vd = [[NSBezierPath bezierPath] retain];
+    NSBezierPath* vd = [NSBezierPath bezierPath];
 
     NSInteger i, m, k, tag;
     potrace_dpoint_t cp;
@@ -418,8 +417,8 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
 
     if (tp->sign == '-') {
         NSBezierPath* temp = [vd bezierPathByReversingPath];
-        [vd release];
-        vd = [temp retain];
+        
+        vd = temp;
     }
 
     // not auroreleased as this is private and caller will release directly as needed
@@ -446,7 +445,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
             NSBezierPath* temp;
 
             if (tp) {
-                mVectorData = [[NSBezierPath bezierPath] retain];
+                mVectorData = [NSBezierPath bezierPath];
                 [mVectorData setWindingRule:NSEvenOddWindingRule];
             }
 
@@ -456,7 +455,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
                 if (temp && ![temp isEmpty])
                     [mVectorData appendBezierPath:temp];
 
-                [temp release];
+                
 
                 tp = tp->next;
             }
@@ -467,15 +466,15 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
         potrace_state_free(traceResult);
     }
 
-    return [mVectorData autorelease];
+    return mVectorData;
 }
 
 #pragma mark -
 #pragma mark - colour from original image associated with this bitplane
 - (void)setColour:(NSColor*)cin
 {
-    [cin retain];
-    [mColour release];
+    
+    
     mColour = cin;
 }
 
@@ -486,8 +485,8 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
 
     if (mColour == nil) {
         CGFloat gray = (CGFloat)mPixelValue / (CGFloat)mLevels;
-        mColour = [[NSColor colorWithCalibratedWhite:gray
-                                               alpha:1.0] retain];
+        mColour = [NSColor colorWithCalibratedWhite:gray
+                                               alpha:1.0];
     }
 
     return mColour;
@@ -500,7 +499,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
 
     // retrace next time the path is requested
 
-    [mVectorData release];
+    
     mVectorData = nil;
 }
 
@@ -513,7 +512,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
 - (void)setTurnPolicy:(NSInteger)turnPolicy
 {
     mTraceParams->turnpolicy = turnPolicy;
-    [mVectorData release];
+    
     mVectorData = nil;
 }
 
@@ -526,7 +525,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
 - (void)setAlphaMax:(double)alphaMax
 {
     mTraceParams->alphamax = alphaMax;
-    [mVectorData release];
+    
     mVectorData = nil;
 }
 
@@ -539,7 +538,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
 - (void)setOptimizeCurve:(BOOL)opt
 {
     mTraceParams->opticurve = opt;
-    [mVectorData release];
+    
     mVectorData = nil;
 }
 
@@ -552,7 +551,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
 - (void)setOptimizeTolerance:(double)optTolerance
 {
     mTraceParams->opttolerance = optTolerance;
-    [mVectorData release];
+    
     mVectorData = nil;
 }
 
@@ -572,7 +571,7 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
         mTraceParams = potrace_param_default();
         mTraceParams->turdsize = 6;
 
-        [mVectorData release];
+        
         mVectorData = nil;
 
         return;
@@ -622,8 +621,8 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
 #pragma mark As an NSObject
 - (void)dealloc
 {
-    [mColour release];
-    [mVectorData release];
+    
+    
 
     if (mTraceParams != NULL) {
         potrace_param_free(mTraceParams);
@@ -632,7 +631,6 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
         bm_free(mBits);
     }
 
-    [super dealloc];
 }
 
 @end

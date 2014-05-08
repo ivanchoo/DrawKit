@@ -41,7 +41,7 @@ static NSString* kDKBasicTextStyleDefaultKey = @"326CF635-7863-42C6-900D-CFFC7D5
 
         [DKStyleRegistry registerStyle:dts
                           inCategories:[NSArray arrayWithObject:kDKStyleRegistryDKDefaultsCategory]];
-        [dts release];
+        
     }
 
     return dts;
@@ -62,7 +62,7 @@ static NSString* kDKBasicTextStyleDefaultKey = @"326CF635-7863-42C6-900D-CFFC7D5
     [ts setAlignment:NSNaturalTextAlignment];
     [ts setName:[self styleNameForFont:font]];
 
-    return [ts autorelease];
+    return ts;
 }
 
 /** @brief Returns the name and size of the font in a form that can be used as a style name
@@ -98,7 +98,7 @@ static NSString* kDKBasicTextStyleDefaultKey = @"326CF635-7863-42C6-900D-CFFC7D5
 
         [mps setAlignment:align];
         [self setParagraphStyle:mps];
-        [mps release];
+        
 
         NSString* actionName = nil;
 
@@ -151,7 +151,7 @@ static NSString* kDKBasicTextStyleDefaultKey = @"326CF635-7863-42C6-900D-CFFC7D5
             [attr setObject:val
                      forKey:attribute];
         [self setTextAttributes:attr];
-        [attr release];
+        
         [[self undoManager] setActionName:[self actionNameForTextAttribute:attribute]];
     }
 }
@@ -288,7 +288,7 @@ static NSString* kDKBasicTextStyleDefaultKey = @"326CF635-7863-42C6-900D-CFFC7D5
         [shad setShadowOffset:offset];
 
         [fill setShadow:shad];
-        [shad release];
+        
     }
     [styl addRenderer:fill];
 
@@ -302,7 +302,7 @@ static NSString* kDKBasicTextStyleDefaultKey = @"326CF635-7863-42C6-900D-CFFC7D5
         [styl addRenderer:stroke];
     }
 
-    return [styl autorelease];
+    return styl;
 }
 
 @end

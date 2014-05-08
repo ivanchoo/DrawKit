@@ -103,7 +103,7 @@
         isStupid = proxy != umExample;
         hasTested = YES;
 
-        [umExample release];
+        
         /*
 		if( isStupid )
 			NSLog(@"This version of the OS has the stupid Snow Leopard Undo change");
@@ -154,8 +154,8 @@
 - (id)prepareWithInvocationTarget:(id)target
 {
     if (mEmulate105Behaviour) {
-        [mTarget release];
-        mTarget = [target retain];
+        
+        mTarget = target;
         mSkipTargetRef = target;
         mSkipTask = YES;
         return self;
@@ -176,7 +176,7 @@
 {
     // if a deferred group is flagged, open it for real now as we have a task to put in it
 
-    [mTarget release];
+    
     mTarget = nil;
 
     if ([self isUndoRegistrationEnabled]) {
@@ -242,7 +242,7 @@
 
 - (void)dealloc
 {
-    [mTarget release];
+    
     [super dealloc];
 }
 

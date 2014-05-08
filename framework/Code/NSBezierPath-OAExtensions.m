@@ -1,4 +1,4 @@
-// Copyright 2000-2007 Omni Development, Inc.  All rights reserved.
+// Copyright 2000-2008, 2010-2013 Omni Development, Inc. All rights reserved.
 //
 // This software may only be used and reproduced according to the
 // terms in the file OmniSourceLicense.html, which should be
@@ -9,12 +9,15 @@
 #import "NSBezierPath-OAInternal.h"
 
 #import <AppKit/AppKit.h>
-//#import <OmniBase/OmniBase.h>
-//#import <OmniBase/assertions.h>
+#import <OmniBase/OmniBase.h>
+#import <OmniBase/assertions.h>
+#import <OmniBase/macros.h>
 
-//RCS_ID("$Header: svn+ssh://source.omnigroup.com/Source/svn/Omni/tags/OmniSourceRelease/2008-03-20/OmniGroup/Frameworks/OmniAppKit/OpenStepExtensions.subproj/NSBezierPath-OAExtensions.m 91941 2007-09-26 20:46:20Z wiml $")
+RCS_ID("$Id$")
 
-#if defined(DEBUGGING_CURVE_INTERSECTIONS)
+#define NONNULL_ARGS __attribute__((nonnull))
+
+#if DEBUGGING_CURVE_INTERSECTIONS
 #define CDB(x) x
 
 static const char *straspect(enum OAIntersectionAspect a)
@@ -32,18 +35,62 @@ static const char *straspect(enum OAIntersectionAspect a)
 #endif
 
 // This distance should really be passed in from the caller. In Graffle we could adjust it based on the line stroke width.
-#define GRAZING_CURVE_BLOOM_DISTANCE 1e-4
+#define GRAZING_CURVE_BLOOM_DISTANCE 1e-4f
 
-static NSRect _parameterizedCurveBounds(const NSPoint *curveCoefficients);
+@interface NSBezierPath (PrivateOAExtensions)
+
+/*
+ Defined in NSBezierPath-OAInternal.h
+ 
+struct intersectionInfo {
+    double leftParameter, rightParameter;
+    double leftParameterDistance, rightParameterDistance;
+    enum OAIntersectionAspect leftEntryAspect, leftExitAspect;
+};
+*/
+
+NSString *_roundedStringForPoint(NSPoint point);
+static NSRect _parameterizedCurveBounds(const NSPoint *curveCoefficients) NONNULL_ARGS;
 // static NSRect _bezierCurveToBounds(const NSPoint *curvePoints);
 // wants 4 coefficients and 3 roots
 // returns the number of solutions
-static NSInteger _solveCubic(const double *c, double *roots, NSInteger *multiplicity);
+static unsigned _solveCubic(const double *c, double  *roots, unsigned *multiplicity) NONNULL_ARGS;
+void _parameterizeLine(NSPoint *coefficients, NSPoint startPoint, NSPoint endPoint) NONNULL_ARGS;
+void _parameterizeCurve(NSPoint *coefficients, NSPoint startPoint, NSPoint endPoint, NSPoint controlPoint1, NSPoint controlPoint2) NONNULL_ARGS;
+unsigned intersectionsBetweenLineAndLine(const NSPoint *l1, const NSPoint *l2, struct intersectionInfo *results) NONNULL_ARGS;
+unsigned intersectionsBetweenCurveAndLine(const NSPoint *c, const NSPoint *a, struct intersectionInfo *results) NONNULL_ARGS;
+unsigned intersectionsBetweenCurveAndCurve(const NSPoint *c1coefficients, const NSPoint *c2coefficients, struct intersectionInfo *results) NONNULL_ARGS;
+unsigned intersectionsBetweenCurveAndSelf(const NSPoint *coefficients, struct intersectionInfo *results) NONNULL_ARGS;
 
+struct subpathWalkingState {
+    NSBezierPath *pathBeingWalked;      // The NSBezierPath we're iterating through
+    NSInteger elementCount;             // [pathBeingWalked elementCount]
+    NSPoint startPoint;                 // first point of this subpath, for closepath
+    NSBezierPathElement what;           // the type of the current segment/element
+    NSPoint points[4];                  // point[0] is currentPoint (derived from previous element)
+    NSInteger currentElt;               // index into pathBeingWalked of currently used element
+    BOOL possibleImplicitClosepath;     // Fake up a closepath if needed?
+    
+    // Note that if currentElt >= elementCount, then 'what' may be a faked-up closepath or other element not actually found in the NSBezierPath.
+};
 
-static BOOL _straightLineIntersectsRect(const NSPoint *a, NSRect rect);
+BOOL initializeSubpathWalkingState(struct subpathWalkingState *s, NSBezierPath *p, NSInteger startIndex, BOOL implicitClosepath);
+BOOL nextSubpathElement(struct subpathWalkingState *s) NONNULL_ARGS;
+BOOL hasNextSubpathElement(struct subpathWalkingState *s) NONNULL_ARGS;
+void repositionSubpathWalkingState(struct subpathWalkingState *s, NSInteger toIndex) NONNULL_ARGS;
+
+- (BOOL)_curvedIntersection:(CGFloat *)length time:(CGFloat *)time curve:(NSPoint *)c line:(NSPoint *)a;
+
+static BOOL _straightLineIntersectsRect(const NSPoint *a, NSRect rect) NONNULL_ARGS;
 // static void _splitCurve(const NSPoint *c, NSPoint *left, NSPoint *right);  // Not currently used
-static BOOL _curvedLineIntersectsRect(const NSPoint *c, NSRect rect, CGFloat tolerance);
+static BOOL _curvedLineIntersectsRect(const NSPoint *c, NSRect rect, CGFloat tolerance) NONNULL_ARGS;
+
+- (BOOL)_curvedLineHit:(NSPoint)point startPoint:(NSPoint)startPoint endPoint:(NSPoint)endPoint controlPoint1:(NSPoint)controlPoint1 controlPoint2:(NSPoint)controlPoint2 position:(CGFloat *)position padding:(CGFloat)padding;
+- (BOOL)_straightLineIntersection:(CGFloat *)length time:(CGFloat *)time segment:(NSPoint *)s line:(const NSPoint *)l;
+- (BOOL)_straightLineHit:(NSPoint)startPoint :(NSPoint)endPoint :(NSPoint)point  :(CGFloat *)position padding:(CGFloat)padding;
+- (NSPoint)_endPointForSegment:(NSInteger)i;
+
+@end
 
 //
 
@@ -52,22 +99,24 @@ struct pointInfo {
     double tangentX, tangentY;
 };
 
+static struct pointInfo getCurvePoint(const NSPoint *c, CGFloat u) NONNULL_ARGS;
+static struct pointInfo getLinePoint(const NSPoint *a, CGFloat position) NONNULL_ARGS;
 
 // Returns a point offset to the left (in an increasing-Y-upwards coordinate system, if up==NO) or towards increasing Y (if up==YES)
-static inline NSPoint offsetPoint(struct pointInfo pinf, CGFloat offset, BOOL up)
+static inline NSPoint offsetPoint(struct pointInfo pi, CGFloat offset, BOOL up)
 {
-    double length = hypot(pinf.tangentX, pinf.tangentY);
+    double length = hypot(pi.tangentX, pi.tangentY);
     if (length < 1e-15)
-        return pinf.pt;  // sigh
+        return pi.pt;  // sigh
     
-    if (up && pinf.tangentX < 0) {
-        pinf.tangentX = -pinf.tangentX;
-        pinf.tangentY = -pinf.tangentY;
+    if (up && pi.tangentX < 0) {
+        pi.tangentX = -pi.tangentX;
+        pi.tangentY = -pi.tangentY;
     }
     
     return (NSPoint){
-        .x = pinf.pt.x - pinf.tangentY * offset / length,
-        .y = pinf.pt.y + pinf.tangentX * offset / length
+        .x = (CGFloat)(pi.pt.x - pi.tangentY * offset / length),
+        .y = (CGFloat)(pi.pt.y + pi.tangentX * offset / length)
     };
 }
 
@@ -77,8 +126,8 @@ static struct pointInfo getCurvePoint(const NSPoint *c, CGFloat u) {
     struct pointInfo i;
     i.pt.x = c[0].x + u * (c[1].x + u * (c[2].x + u * c[3].x));
     i.pt.y = c[0].y + u * (c[1].y + u * (c[2].y + u * c[3].y));
-    i.tangentX = c[1].x + u * (2.0 * c[2].x  + u * 3.0 * c[3].x);
-    i.tangentY = c[1].y + u * (2.0 * c[2].y  + u * 3.0 * c[3].y);
+    i.tangentX = c[1].x + u * (2.0f * c[2].x  + u * 3.0f * c[3].x);
+    i.tangentY = c[1].y + u * (2.0f * c[2].y  + u * 3.0f * c[3].y);
     return i;
 }
 
@@ -93,6 +142,13 @@ static struct pointInfo getLinePoint(const NSPoint *a, CGFloat position) {
 
 @implementation NSBezierPath (OAExtensions)
 
++ (NSBezierPath *)bezierPathWithRoundedRectangle:(NSRect)rect byRoundingCorners:(OFRectCorner)corners withRadius:(CGFloat)radius;
+{
+    NSBezierPath *path = [[NSBezierPath alloc] init];
+    [path appendBezierPathWithRoundedRectangle:rect byRoundingCorners:corners withRadius:radius];
+    return [path autorelease];
+}
+
 - (NSPoint)currentpointForSegment:(NSInteger)i
 {
     NSPoint points[3];
@@ -103,8 +159,7 @@ static struct pointInfo getLinePoint(const NSPoint *a, CGFloat position) {
         if (element == NSMoveToBezierPathElement)
             return points[0];
         else
-#warning 64BIT: Inspect use of long
-            [NSException raise:NSInternalInconsistencyException format:@"Segment %ld has no currentpoint", (long)i];
+            [NSException raise:NSInternalInconsistencyException format:@"Segment %ld has no currentpoint", i];
     }
     
     element = [self elementAtIndex:i-1 associatedPoints:points];
@@ -116,22 +171,21 @@ static struct pointInfo getLinePoint(const NSPoint *a, CGFloat position) {
         case NSLineToBezierPathElement:
             return points[0];
         default:
-#warning 64BIT: Inspect use of long
-            [NSException raise:NSInternalInconsistencyException format:@"Segment %ld has no currentpoint", (long)i];
+            [NSException raise:NSInternalInconsistencyException format:@"Segment %ld has no currentpoint", i];
     }
     
     /* NOTREACHED */
     return (NSPoint){ nanf(""), nanf("") };
 }
 
-- (BOOL)strokesSimilarlyIgnoringEndcapsToPath:(NSBezierPath *)otherPath
+- (BOOL)strokesSimilarlyIgnoringEndcapsToPath:(NSBezierPath *)otherPath;
 {
     return [[self countedSetOfEncodedStrokeSegments] isEqual:[otherPath countedSetOfEncodedStrokeSegments]];
 }
 
-- (NSCountedSet *)countedSetOfEncodedStrokeSegments
+- (NSCountedSet *)countedSetOfEncodedStrokeSegments;
 {
-    NSPoint unlikelyPoint = {-10275847.33894, -10275847.33894};
+    NSPoint unlikelyPoint = {(CGFloat)-10275847.33894, (CGFloat)-10275847.33894};
     NSPoint firstPoint = unlikelyPoint, currentPoint = NSZeroPoint;
 
     NSCountedSet *countedSetOfEncodedStrokeSegments = [NSCountedSet set];
@@ -184,9 +238,6 @@ static struct pointInfo getLinePoint(const NSPoint *a, CGFloat position) {
                 [countedSetOfEncodedStrokeSegments addObject:[NSString stringWithFormat:@"%@%@%@%@", firstPointString, controlPoint1String, controlPoint2String, lastPointString]];
                 currentPoint = points[2];
                 break;
-				
-//			default: jmj
-//				break;
             }
         }
         if (currentSegmentString != nil)
@@ -208,13 +259,12 @@ static struct pointInfo getLinePoint(const NSPoint *a, CGFloat position) {
     NSPoint currentPoint;
     NSPoint line[2];
     NSPoint curve[4];
-    NSInteger element;
     BOOL needANewStartPoint;
 
     if (count == 0)
         return NO;
 
-    element = [self elementAtIndex:0 associatedPoints:points];
+    NSBezierPathElement element = [self elementAtIndex:0 associatedPoints:points];
     if (element != NSMoveToBezierPathElement) {
         return NO;  // must start with a moveTo
     }
@@ -223,7 +273,7 @@ static struct pointInfo getLinePoint(const NSPoint *a, CGFloat position) {
     needANewStartPoint = NO;
     
     for(i=1;i<count;i++) {
-        element = [self elementAtIndex:i associatedPoints:points];
+        NSBezierPathElement element = [self elementAtIndex:i associatedPoints:points];
         switch(element) {
             case NSMoveToBezierPathElement:
                 currentPoint = points[0];
@@ -254,9 +304,6 @@ static struct pointInfo getLinePoint(const NSPoint *a, CGFloat position) {
                 }
                 currentPoint = points[2];
                 break;
-				
-			default:
-				break;
             }
         }
     }
@@ -264,34 +311,39 @@ static struct pointInfo getLinePoint(const NSPoint *a, CGFloat position) {
     return NO;
 }
 
-
 static void copyIntersection(OABezierPathIntersection *buf, const struct intersectionInfo *info, NSInteger leftSegment, NSInteger rightSegment)
 {
-    buf->left.segment = leftSegment;
-    buf->left.parameter = info->leftParameter;
-    buf->left.parameterDistance = info->leftParameterDistance;
+    OABezierPathIntersectionHalf left;
+    OABezierPathIntersectionHalf right;
     
-    buf->right.segment = rightSegment;
-    buf->right.parameter = info->rightParameter;
-    buf->right.parameterDistance = info->rightParameterDistance;
+    left.segment = leftSegment;
+    left.parameter = info->leftParameter;
+    left.parameterDistance = info->leftParameterDistance;
+    
+    right.segment = rightSegment;
+    right.parameter = info->rightParameter;
+    right.parameterDistance = info->rightParameterDistance;
     
     OBINVARIANT(info->leftParameterDistance >= 0);
     if (info->rightParameterDistance >= 0) {
-        buf->left.firstAspect = info->leftEntryAspect;
-        buf->left.secondAspect = info->leftExitAspect;
-        buf->right.firstAspect = - ( info->leftEntryAspect );
-        buf->right.secondAspect = - ( info->leftExitAspect );
+        left.firstAspect = info->leftEntryAspect;
+        left.secondAspect = info->leftExitAspect;
+        right.firstAspect = - ( info->leftEntryAspect );
+        right.secondAspect = - ( info->leftExitAspect );
     } else {
-        buf->left.firstAspect = info->leftExitAspect;
-        buf->left.secondAspect = info->leftEntryAspect;
-        buf->right.firstAspect = - ( info->leftEntryAspect );
-        buf->right.secondAspect = - ( info->leftExitAspect );
+        left.firstAspect = info->leftExitAspect;
+        left.secondAspect = info->leftEntryAspect;
+        right.firstAspect = - ( info->leftEntryAspect );
+        right.secondAspect = - ( info->leftExitAspect );
     }
+    
+    buf.left = left;
+    buf.right = right;
 }
 
-- (BOOL)firstIntersectionWithLine:(OABezierPathIntersection *)result lineStart:(NSPoint)lineStart lineEnd:(NSPoint)lineEnd
+- (BOOL)firstIntersectionWithLine:(OABezierPathIntersection *)result lineStart:(NSPoint)lineStart lineEnd:(NSPoint)lineEnd;
 {
-    subpathWalkingState iter;
+    struct subpathWalkingState iter;
     NSPoint lineCoefficients[2];
     double leastParameterSoFar;
     BOOL haveResult;
@@ -303,11 +355,11 @@ static void copyIntersection(OABezierPathIntersection *buf, const struct interse
     
     haveResult = NO;
     
-    leastParameterSoFar = 2.0;  // Greater than any point on the line
+    leastParameterSoFar = 2.0f;  // Greater than any point on the line
     while(nextSubpathElement(&iter)) {
         struct intersectionInfo intersections[MAX_INTERSECTIONS_WITH_LINE];
         NSPoint elementCoefficients[4];
-        NSInteger intersectionsFound, intersectionIndex;
+        unsigned intersectionsFound, intersectionIndex;
         
         switch(iter.what) {
             case NSClosePathBezierPathElement:
@@ -341,8 +393,10 @@ static void copyIntersection(OABezierPathIntersection *buf, const struct interse
                 haveResult = YES;
                 if (result) {
                     copyIntersection(result, &(intersections[intersectionIndex]), iter.currentElt, 0);
-                    result->location.x = lineCoefficients[0].x + leastParameterSoFar * lineCoefficients[1].x;
-                    result->location.y = lineCoefficients[0].y + leastParameterSoFar * lineCoefficients[1].y;
+                    NSPoint location;
+                    location.x = (CGFloat)(lineCoefficients[0].x + leastParameterSoFar * lineCoefficients[1].x);
+                    location.y = (CGFloat)(lineCoefficients[0].y + leastParameterSoFar * lineCoefficients[1].y);
+                    result.location = location;
                 }
             }
         }
@@ -351,7 +405,7 @@ static void copyIntersection(OABezierPathIntersection *buf, const struct interse
     return haveResult;
 }
 
-static void parameterizeSubpathElement( subpathWalkingState *st, NSPoint elementCoefficients[4])
+static void parameterizeSubpathElement(struct subpathWalkingState *st, NSPoint elementCoefficients[4])
 {
     switch(st->what) {
         case NSClosePathBezierPathElement:
@@ -400,21 +454,17 @@ static BOOL subsequent(struct OABezierPathIntersectionHalf *one, struct OABezier
 }
 #endif
 
-- (struct OABezierPathIntersectionList)allIntersectionsWithPath:(NSBezierPath *)other
+- (NSArray *)allIntersectionsWithPath:(NSBezierPath *)other
 {
-    NSUInteger intersectionCount, listSize;
-    OABezierPathIntersection *intersections;
-	subpathWalkingState selfIter;
+    struct subpathWalkingState selfIter;
     
     if (!initializeSubpathWalkingState(&selfIter, self, 0, NO))
-        return (struct OABezierPathIntersectionList){ 0, NULL };
+        return [NSArray array];
     
-    intersectionCount = 0;
-#warning 64BIT: Inspect use of sizeof
-    intersections = malloc(sizeof(*intersections) * (listSize = 16));
+    NSMutableArray *intersections =[[NSMutableArray alloc] init];
     
     while(nextSubpathElement(&selfIter)) {
-        subpathWalkingState otherIter;
+        struct subpathWalkingState otherIter;
         NSPoint elementCoefficients[4];
         
         if (!initializeSubpathWalkingState(&otherIter, other, 0, NO))
@@ -424,7 +474,7 @@ static BOOL subsequent(struct OABezierPathIntersectionHalf *one, struct OABezier
 
         while(nextSubpathElement(&otherIter)) {
             NSPoint otherElementCoefficients[4];
-            NSUInteger intersectionsFound, intersectionIndex;
+            unsigned intersectionsFound, intersectionIndex;
             struct intersectionInfo segmentIntersections[MAX_INTERSECTIONS_PER_ELT_PAIR];
 
             // Special case for finding self-intersections of a path
@@ -504,55 +554,48 @@ static BOOL subsequent(struct OABezierPathIntersectionHalf *one, struct OABezier
                 }
             }
                     
-            if (intersectionsFound + intersectionCount > listSize) {
-#warning 64BIT: Inspect use of sizeof
-                intersections = realloc(intersections, sizeof(*intersections) * (listSize += (listSize >> 1)));
-            }
-            
-            NSUInteger earliestInsertionPoint = intersectionCount;
+            NSUInteger earliestInsertionPoint = [intersections count];
             
             for(intersectionIndex = 0; intersectionIndex < intersectionsFound; intersectionIndex++) {
-                NSUInteger insertionPoint = intersectionCount;
+                NSUInteger insertionPoint = [intersections count];
                 double t;
                 
                 // Find where to insert this intersection so that the list remains sorted
                 while(insertionPoint > 0 &&
-                      intersections[insertionPoint-1].left.parameter > segmentIntersections[intersectionIndex].leftParameter &&
-                      intersections[insertionPoint-1].left.segment >= selfIter.currentElt)
+                      ((OABezierPathIntersection *)[intersections objectAtIndex:insertionPoint - 1]).left.parameter > segmentIntersections[intersectionIndex].leftParameter &&
+                      ((OABezierPathIntersection *)[intersections objectAtIndex:insertionPoint - 1]).left.segment >= selfIter.currentElt)
                     insertionPoint --;
                 
-                // Make room, if necessary
-                if (insertionPoint < intersectionCount)
-#warning 64BIT: Inspect use of sizeof
-                    memmove(&(intersections[insertionPoint+1]), &(intersections[insertionPoint]), sizeof(*intersections)*(intersectionCount-insertionPoint));
                 if (insertionPoint < earliestInsertionPoint)
                     earliestInsertionPoint = insertionPoint;
                 
-                copyIntersection(&(intersections[insertionPoint]), &(segmentIntersections[intersectionIndex]), selfIter.currentElt, otherIter.currentElt);
+                OABezierPathIntersection *newIntersection = [[OABezierPathIntersection alloc] init];
+                copyIntersection(newIntersection, &(segmentIntersections[intersectionIndex]), selfIter.currentElt, otherIter.currentElt);
                 
                 // parameterizeSubpathElement() fills the higher coefficients with 0 if they're not needed, so we can go ahead and treat everything as a cubic here.
                 t = segmentIntersections[intersectionIndex].leftParameter;
-                intersections[insertionPoint].location.x = (( elementCoefficients[3].x * t + elementCoefficients[2].x ) * t + elementCoefficients[1].x ) * t + elementCoefficients[0].x;
-                intersections[insertionPoint].location.y = (( elementCoefficients[3].y * t + elementCoefficients[2].y ) * t + elementCoefficients[1].y ) * t + elementCoefficients[0].y;
-                
-                intersectionCount ++;
+                NSPoint location;
+                location.x = (CGFloat)((( elementCoefficients[3].x * t + elementCoefficients[2].x ) * t + elementCoefficients[1].x ) * t + elementCoefficients[0].x);
+                location.y = (CGFloat)((( elementCoefficients[3].y * t + elementCoefficients[2].y ) * t + elementCoefficients[1].y ) * t + elementCoefficients[0].y);
+                newIntersection.location = location;
+
+                [intersections insertObject:newIntersection atIndex:insertionPoint];
+                [newIntersection release];
             }
         }
     }
     
-    if (listSize - intersectionCount > 8)
-#warning 64BIT: Inspect use of sizeof
-        intersections = realloc(intersections, sizeof(*intersections) * (listSize = intersectionCount));
-
-    return (struct OABezierPathIntersectionList){ intersectionCount, intersections };
+    NSArray *result = [NSArray arrayWithArray:intersections];
+    [intersections release];
+    return result;
 }
 
 // TODO: Write unit tests for this. In particular, make sure the winding count comes out right even if the test point is lined up with a vertex or cusp.
-- (void)getWinding:(NSInteger *)windingCountPtr andHit:(NSUInteger *)hitCountPtr forPoint:(NSPoint)point
+- (void)getWinding:(NSInteger *)windingCountPtr andHit:(NSUInteger *)hitCountPtr forPoint:(NSPoint)point;
 {
     NSInteger windingCount;
     NSUInteger hitCount;
-    subpathWalkingState cursor;
+    struct subpathWalkingState cursor;
     
     windingCount = 0;
     hitCount = 0;
@@ -585,9 +628,8 @@ static BOOL subsequent(struct OABezierPathIntersectionHalf *one, struct OABezier
                 {
                     BOOL above=NO, below=NO;
                     CGFloat leastX, greatestX;
-                    NSInteger i;
                     leastX = greatestX = cursor.points[0].x;
-                    for(i = 0; i < 4; i++) {
+                    for(unsigned i = 0; i < 4; i++) {
                         if(cursor.points[i].x < leastX)
                             leastX = cursor.points[i].x;
                         else if(cursor.points[i].x >= greatestX)
@@ -607,12 +649,12 @@ static BOOL subsequent(struct OABezierPathIntersectionHalf *one, struct OABezier
                         } else {
                             NSPoint testLine[2], curveCoeff[4];
                             struct intersectionInfo crossings[MAX_INTERSECTIONS_WITH_LINE];
-                            NSInteger intersectionsFound, intersectionIndex;
+                            unsigned intersectionsFound, intersectionIndex;
                             
-                            testLine[0].x = leastX - 1.0;
+                            testLine[0].x = (CGFloat)(leastX - 1.0);
                             testLine[0].y = point.y;
                             testLine[1].x = point.x - testLine[0].x;
-                            testLine[1].y = 0.0;
+                            testLine[1].y = (CGFloat)0.0;
                             
                             _parameterizeCurve(curveCoeff, cursor.points[0], cursor.points[3], cursor.points[1], cursor.points[2]);
                             intersectionsFound = intersectionsBetweenCurveAndLine(curveCoeff, testLine, crossings);
@@ -658,16 +700,14 @@ static BOOL subsequent(struct OABezierPathIntersectionHalf *one, struct OABezier
     NSPoint lineCoefficients[2];
     NSPoint startPoint;
     NSPoint currentPoint;
-    CGFloat minimumLength = 1.0;
-    NSInteger element;
+    CGFloat minimumLength = 1.0f;
     NSInteger count = [self elementCount];
-    NSInteger i;
     BOOL needANewStartPoint;
 
     if (count == 0)
         return NO;
         
-    element = [self elementAtIndex:0 associatedPoints:points];
+    NSBezierPathElement element = [self elementAtIndex:0 associatedPoints:points];
 
     if (element != NSMoveToBezierPathElement) 
         return NO;  // must start with a moveTo
@@ -677,8 +717,8 @@ static BOOL subsequent(struct OABezierPathIntersectionHalf *one, struct OABezier
     startPoint = currentPoint = points[0];
     needANewStartPoint = NO;
     
-    for(i=1;i<count;i++) {
-        CGFloat ignored, currentLength = 1.0;
+    for(NSInteger i=1;i<count;i++) {
+        CGFloat ignored, currentLength = 1.0f;
 
         element = [self elementAtIndex:i associatedPoints:points];
         switch(element) {
@@ -717,9 +757,6 @@ static BOOL subsequent(struct OABezierPathIntersectionHalf *one, struct OABezier
                 }
                 currentPoint = points[2];
                 break;
-				
-			default:
-				break;
         }
     }
 
@@ -735,7 +772,7 @@ static BOOL subsequent(struct OABezierPathIntersectionHalf *one, struct OABezier
 void splitBezierCurveTo(const NSPoint *c, CGFloat t, NSPoint *l, NSPoint *r)
 {
     NSPoint mid;
-    CGFloat oneMinusT = 1.0 - t;
+    CGFloat oneMinusT = 1.0f - t;
     
     l[0] = c[0];
     r[3] = c[3];
@@ -756,12 +793,72 @@ void splitBezierCurveTo(const NSPoint *c, CGFloat t, NSPoint *l, NSPoint *r)
 
 - (NSInteger)segmentHitByPoint:(NSPoint)point padding:(CGFloat)padding {
     CGFloat position = 0;
-    return [self _segmentHitByPoint:point position:&position padding:padding];
+    return [self segmentHitByPoint:point position:&position padding:padding];
 }
 
 - (NSInteger)segmentHitByPoint:(NSPoint)point  {
     CGFloat position = 0;
-    return [self _segmentHitByPoint:point position:&position padding:5.0];
+    return [self segmentHitByPoint:point position:&position padding:5.0f];
+}
+
+- (NSInteger)segmentHitByPoint:(NSPoint)point position:(CGFloat *)position padding:(CGFloat)padding;
+{
+    NSInteger count = [self elementCount];
+    NSInteger i;
+    NSPoint points[3];
+    NSPoint startPoint;
+    NSPoint currentPoint;
+    BOOL needANewStartPoint;
+    
+    if (count == 0)
+        return 0;
+    
+    NSBezierPathElement element = [self elementAtIndex:0 associatedPoints:points];
+    if (element != NSMoveToBezierPathElement) {
+        return 0;  // must start with a moveTo
+    }
+    
+    startPoint = currentPoint = points[0];
+    needANewStartPoint = NO;
+    
+    for(i=1;i<count;i++) {
+        element = [self elementAtIndex:i associatedPoints:points];
+        if (NSEqualPoints(points[0], point)) {
+            if (i==0) {
+                i = 1;
+            }
+            return i;
+        }
+        switch(element) {
+            case NSMoveToBezierPathElement:
+                currentPoint = points[0];
+                if (needANewStartPoint) {
+                    startPoint = currentPoint;
+                    needANewStartPoint = NO;
+                }
+                break;
+            case NSClosePathBezierPathElement:
+                if ([self _straightLineHit:currentPoint :startPoint :point :position padding:padding]){
+                    return i;
+                }
+                currentPoint = startPoint;
+                needANewStartPoint = YES;
+                break;
+            case NSLineToBezierPathElement:
+                if ([self _straightLineHit:currentPoint :points[0] :point :position padding:padding]){
+                    return i;
+                }
+                currentPoint = points[0];
+                break;
+            case NSCurveToBezierPathElement:
+                if ([self _curvedLineHit:point startPoint:currentPoint endPoint:points[2] controlPoint1:points[0] controlPoint2:points[1] position:position padding:padding]) {
+                    return i;
+                }
+                currentPoint = points[2];
+                break;
+        }
+    }
+    return 0;
 }
 
 - (BOOL)isStrokeHitByPoint:(NSPoint)point padding:(CGFloat)padding
@@ -772,56 +869,121 @@ void splitBezierCurveTo(const NSPoint *c, CGFloat t, NSPoint *l, NSPoint *r)
 
 - (BOOL)isStrokeHitByPoint:(NSPoint)point
 {
-    NSInteger segment = [self segmentHitByPoint:point padding:5.0];
+    NSInteger segment = [self segmentHitByPoint:point padding:5.0f];
     return (segment != 0);
 }
 
-//
-
-// From Scott Anguish's Cocoa book, I believe.
-- (void)appendBezierPathWithRoundedRectangle:(NSRect)aRect withRadius:(CGFloat)radius
+- (void)appendBezierPathWithRoundedRectangle:(NSRect)rect withRadius:(CGFloat)radius;
 {
-    NSPoint topMid = NSMakePoint(NSMidX(aRect), NSMaxY(aRect));
-    NSPoint topLeft = NSMakePoint(NSMinX(aRect), NSMaxY(aRect));
-    NSPoint topRight = NSMakePoint(NSMaxX(aRect), NSMaxY(aRect));
-    NSPoint bottomRight = NSMakePoint(NSMaxX(aRect), NSMinY(aRect));
-
-    [self moveToPoint:topMid];
-    [self appendBezierPathWithArcFromPoint:topLeft toPoint:aRect.origin radius:radius];
-    [self appendBezierPathWithArcFromPoint:aRect.origin toPoint:bottomRight radius:radius];
-    [self appendBezierPathWithArcFromPoint:bottomRight toPoint:topRight radius:radius];
-    [self appendBezierPathWithArcFromPoint:topRight toPoint:topLeft radius:radius];
-    [self closePath];
+    return [self appendBezierPathWithRoundedRectangle:rect byRoundingCorners:OFRectCornerAllCorners withRadius:radius];
 }
 
-- (void)appendBezierPathWithLeftRoundedRectangle:(NSRect)aRect withRadius:(CGFloat)radius
+- (void)appendBezierPathWithLeftRoundedRectangle:(NSRect)rect withRadius:(CGFloat)radius;
 {
-    NSPoint topMid = NSMakePoint(NSMidX(aRect), NSMaxY(aRect));
-    NSPoint topLeft = NSMakePoint(NSMinX(aRect), NSMaxY(aRect));
-    NSPoint topRight = NSMakePoint(NSMaxX(aRect), NSMaxY(aRect));
-    NSPoint bottomRight = NSMakePoint(NSMaxX(aRect), NSMinY(aRect));
-    
-    [self moveToPoint:topMid];
-    [self appendBezierPathWithArcFromPoint:topLeft toPoint:aRect.origin radius:radius];
-    [self appendBezierPathWithArcFromPoint:aRect.origin toPoint:bottomRight radius:radius];
-    [self lineToPoint:bottomRight];
-    [self lineToPoint:topRight];
-    [self closePath];
+    OFRectCorner corners = (OFRectCornerMinXMinY | OFRectCornerMinXMaxY);
+    return [self appendBezierPathWithRoundedRectangle:rect byRoundingCorners:corners withRadius:radius];
 }
 
-- (void)appendBezierPathWithRightRoundedRectangle:(NSRect)aRect withRadius:(CGFloat)radius
+- (void)appendBezierPathWithRightRoundedRectangle:(NSRect)rect withRadius:(CGFloat)radius;
 {
-    NSPoint topMid = NSMakePoint(NSMidX(aRect), NSMaxY(aRect));
-    NSPoint topLeft = NSMakePoint(NSMinX(aRect), NSMaxY(aRect));
-    NSPoint topRight = NSMakePoint(NSMaxX(aRect), NSMaxY(aRect));
-    NSPoint bottomRight = NSMakePoint(NSMaxX(aRect), NSMinY(aRect));
+    OFRectCorner corners = (OFRectCornerMaxXMinY | OFRectCornerMaxXMaxY);
+    return [self appendBezierPathWithRoundedRectangle:rect byRoundingCorners:corners withRadius:radius];
+}
+
+- (void)appendBezierPathWithRoundedRectangle:(NSRect)rect byRoundingCorners:(OFRectCorner)corners withRadius:(CGFloat)radius;
+{
+    // This is the value AppKit uses in -appendBezierPathWithRoundedRect:xRadius:yRadius:
     
-    [self moveToPoint:topMid];
-    [self lineToPoint:topLeft];
-    [self lineToPoint:aRect.origin];
-    [self appendBezierPathWithArcFromPoint:bottomRight toPoint:topRight radius:radius];
-    [self appendBezierPathWithArcFromPoint:topRight toPoint:topLeft radius:radius];
-    [self closePath];
+    const CGFloat kControlPointMultiplier = 0.55228;
+    
+    if (NSIsEmptyRect(rect)) {
+        return;
+    }
+    
+    NSBezierPath *bezierPath = [[self class] bezierPath];
+    NSPoint sourcePoint;
+    NSPoint destPoint;
+    NSPoint controlPoint1;
+    NSPoint controlPoint2;
+    
+    CGFloat length = MIN(NSWidth(rect), NSHeight(rect));
+    radius = MIN(radius, length / 2.0);
+    
+    // Top Left (in terms of a non-flipped view)
+
+    if ((corners & OFRectCornerMinXMinY) != 0) {
+        sourcePoint = NSMakePoint(NSMinX(rect), NSMaxY(rect) - radius);
+        destPoint = NSMakePoint(NSMinX(rect) + radius, NSMaxY(rect));
+        
+        controlPoint1 = sourcePoint;
+        controlPoint1.y += radius * kControlPointMultiplier;
+        
+        controlPoint2 = destPoint;
+        controlPoint2.x -= radius * kControlPointMultiplier;
+        
+        [bezierPath moveToPoint:sourcePoint];
+        [bezierPath curveToPoint:destPoint controlPoint1:controlPoint1 controlPoint2:controlPoint2];
+    } else {
+        [bezierPath moveToPoint:NSMakePoint(NSMinX(rect), NSMaxY(rect))];
+    }
+    
+    // Top right (in terms of a flipped view)
+    
+    if ((corners & OFRectCornerMaxXMinY) != 0) {
+        sourcePoint = NSMakePoint(NSMaxX(rect) - radius, NSMaxY(rect));
+        destPoint = NSMakePoint(NSMaxX(rect), NSMaxY(rect) - radius);
+        
+        controlPoint1 = sourcePoint;
+        controlPoint1.x += radius * kControlPointMultiplier;
+        
+        controlPoint2 = destPoint;
+        controlPoint2.y += radius * kControlPointMultiplier;
+        
+        [bezierPath lineToPoint:sourcePoint];
+        [bezierPath curveToPoint:destPoint controlPoint1:controlPoint1 controlPoint2:controlPoint2];
+    } else {
+        [bezierPath lineToPoint:NSMakePoint(NSMaxX(rect), NSMaxY(rect))];
+    }
+    
+    // Bottom right (in terms of a flipped view)
+    
+    if ((corners & OFRectCornerMaxXMaxY) != 0) {
+        sourcePoint = NSMakePoint(NSMaxX(rect), NSMinY(rect) + radius);
+        destPoint = NSMakePoint(NSMaxX(rect) - radius, NSMinY(rect));
+        
+        controlPoint1 = sourcePoint;
+        controlPoint1.y -= radius * kControlPointMultiplier;
+        
+        controlPoint2 = destPoint;
+        controlPoint2.x += radius * kControlPointMultiplier;
+        
+        [bezierPath lineToPoint:sourcePoint];
+        [bezierPath curveToPoint:destPoint controlPoint1:controlPoint1 controlPoint2:controlPoint2];
+    } else {
+        [bezierPath lineToPoint:NSMakePoint(NSMaxX(rect), NSMinY(rect))];
+    }
+    
+    // Bottom left (in terms of a flipped view)
+    
+    if ((corners & OFRectCornerMinXMaxY) != 0) {
+        sourcePoint = NSMakePoint(NSMinX(rect) + radius, NSMinY(rect));
+        destPoint = NSMakePoint(NSMinX(rect), NSMinY(rect) + radius);
+        
+        controlPoint1 = sourcePoint;
+        controlPoint1.x -= radius * kControlPointMultiplier;
+        
+        controlPoint2 = destPoint;
+        controlPoint2.y -= radius * kControlPointMultiplier;
+        
+        [bezierPath lineToPoint:sourcePoint];
+        [bezierPath curveToPoint:destPoint controlPoint1:controlPoint1 controlPoint2:controlPoint2];
+    } else {
+        [bezierPath lineToPoint:NSMakePoint(NSMinX(rect), NSMinY(rect))];
+    }
+    
+    // Append the path
+    [bezierPath closePath];
+    [self appendBezierPath: bezierPath];
 }
 
 //
@@ -833,7 +995,7 @@ void splitBezierCurveTo(const NSPoint *c, CGFloat t, NSPoint *l, NSPoint *r)
     CGFloat segmentPosition;
     NSInteger segmentCount = [self elementCount] - 1;
     NSPoint startPoint;
-    NSInteger element;
+    NSBezierPathElement element;
 
     if (position < 0)
         position = 0;
@@ -843,7 +1005,7 @@ void splitBezierCurveTo(const NSPoint *c, CGFloat t, NSPoint *l, NSPoint *r)
         segment = segmentCount-1;
         segmentPosition = 1;
     } else {
-        segment = (NSInteger) floor(position*segmentCount);
+        segment = (NSInteger)floor(position*segmentCount);
         segmentPosition = position * segmentCount - segment;
     }
 
@@ -878,9 +1040,6 @@ void splitBezierCurveTo(const NSPoint *c, CGFloat t, NSPoint *l, NSPoint *r)
             _parameterizeCurve(coefficients, startPoint, points[2], points[0], points[1]);
             return getCurvePoint(coefficients, segmentPosition);
         }
-				
-			default:
-				break;
     }
     return (struct pointInfo){ startPoint, 0, 0 }; // ack
 }
@@ -920,46 +1079,40 @@ void splitBezierCurveTo(const NSPoint *c, CGFloat t, NSPoint *l, NSPoint *r)
                     break;
             }
             if (element != NSMoveToBezierPathElement)
-#warning 64BIT: Inspect use of long
-                [NSException raise:NSInternalInconsistencyException format:@"Segment %ld has no preceding moveto", (long)pos.segment];
+                [NSException raise:NSInternalInconsistencyException format:@"Segment %ld has no preceding moveto", pos.segment];
             /* FALL THROUGH to lineto cxase */
         }
         case NSMoveToBezierPathElement:// PENDING: should probably skip this one
         case NSLineToBezierPathElement: {
             _parameterizeLine(coefficients,startPoint,points[0]);
-            return getLinePoint(coefficients, pos.parameter).pt;
+            return getLinePoint(coefficients, (CGFloat)pos.parameter).pt;
         }
         case NSCurveToBezierPathElement: {
             _parameterizeCurve(coefficients, startPoint, points[2], points[0], points[1]);
-            return getCurvePoint(coefficients, pos.parameter).pt;
+            return getCurvePoint(coefficients, (CGFloat)pos.parameter).pt;
         }
- 				
-			default:
-				break;
-   }
+    }
     
-#warning 64BIT: Inspect use of long
-#warning 64BIT: Inspect use of long
-    [NSException raise:NSInternalInconsistencyException format:@"Segment %ld has unexpected element type %ld", (long)pos.segment, (long)element];
+    [NSException raise:NSInternalInconsistencyException format:@"Segment %ld has unexpected element type %ld", pos.segment, element];
     return (NSPoint){ nanf(""), nanf("") };
 }
 
 - (CGFloat)getPositionForPoint:(NSPoint)point {
     CGFloat position =0;
-    NSInteger segment = [self _segmentHitByPoint:point position:&position padding:5.0];
+    NSInteger segment = [self segmentHitByPoint:point position:&position padding:5.0f];
     if (segment) {
         position = position + (segment - 1);
         position /= ([self elementCount] - 1);
         return (position);
     }
-    return 0.5; // EEK!
+    return 0.5f; // EEK!
 }
 
 // NOTE: Graffle used to rely on this method always returning the "upwards" normal for the line; it no longer does (Graffle performs the upwards constraint itself).
 // So this method has been changed to return the "left" normal, since that provides more information to the caller.
 - (CGFloat)getNormalForPosition:(CGFloat)position {
-    struct pointInfo pinf = [self _getPointInfoForPosition:position];
-    return atan2(pinf.tangentX, - pinf.tangentY) * 180.0/M_PI;
+    struct pointInfo pi = [self _getPointInfoForPosition:position];
+    return (CGFloat)(atan2(pi.tangentX, - pi.tangentY) * 180.0/M_PI);
 }
 
 // These use a different interpretation of position than above
@@ -980,7 +1133,7 @@ static double arclength(const NSPoint *V, double error) {
     
     if((boundLength-chordLength) > error) {
         NSPoint left[4], right[4];
-        splitBezierCurveTo(V,0.5,left,right);                            /* split in two */
+        splitBezierCurveTo(V,0.5f,left,right);                            /* split in two */
         return arclength(left,error/2) + arclength(right,error/2);       /* sum the lengths of each side */
     } else {
         return chordLength;
@@ -1003,7 +1156,7 @@ static struct lengthAndParameter arcLength_l(const NSPoint *V, double maxLength,
     
     if (boundLength <= maxLength) { // boundLength is less than the length limit, so there's no way we'll be limited by maxLength
         return (struct lengthAndParameter){
-            .parameter = 1.0,
+            .parameter = 1.0f,
             .length = arclength(V, lengthErrorBudget)
         };
     }
@@ -1013,7 +1166,7 @@ static struct lengthAndParameter arcLength_l(const NSPoint *V, double maxLength,
         double p =  maxLength / boundLength;
         if (p >= 1.0) {
             return (struct lengthAndParameter){
-                .parameter = 1.0,
+                .parameter = 1.0f,
                 .length = boundLength
             };
         } else {
@@ -1026,7 +1179,7 @@ static struct lengthAndParameter arcLength_l(const NSPoint *V, double maxLength,
     
     {
         NSPoint left[4], right[4];
-        splitBezierCurveTo(V, 0.5, left, right);
+        splitBezierCurveTo(V, 0.5f, left, right);
         
         struct lengthAndParameter leftlp = arcLength_l(left, maxLength, lengthErrorBudget/2);
         if (leftlp.length >= maxLength) {
@@ -1045,7 +1198,7 @@ static struct lengthAndParameter arcLength_l(const NSPoint *V, double maxLength,
     }
 }
 
-static double subpathElementLength( subpathWalkingState *iter, double errorBudget)
+static double subpathElementLength(struct subpathWalkingState *iter, double errorBudget)
 {
     switch(iter->what) {
         case NSClosePathBezierPathElement:
@@ -1060,12 +1213,12 @@ static double subpathElementLength( subpathWalkingState *iter, double errorBudge
 }
 
 
-- (double)lengthToSegment:(NSInteger)seg parameter:(double)parameter totalLength:(double *)totalLengthOut
+- (double)lengthToSegment:(NSInteger)seg parameter:(double)parameter totalLength:(double *)totalLengthOut;
 {
-    subpathWalkingState cursor;
+    struct subpathWalkingState cursor;
     double partialLength;
     double totalLength;
-    const double totalErrorBudget = 0.5;
+    const double totalErrorBudget = 0.5f;
     
     if (!initializeSubpathWalkingState(&cursor, self, 0, NO)) {
         if (totalLengthOut)
@@ -1096,7 +1249,7 @@ static double subpathElementLength( subpathWalkingState *iter, double errorBudge
                         break;
                     case NSCurveToBezierPathElement: {
                         NSPoint before[4], after[4];
-                        splitBezierCurveTo(cursor.points, parameter, before, after);
+                        splitBezierCurveTo(cursor.points, (CGFloat)parameter, before, after);
                         partialLength += arclength(before, totalErrorBudget / cursor.elementCount);
                         break;
                     }
@@ -1117,14 +1270,14 @@ static double subpathElementLength( subpathWalkingState *iter, double errorBudge
     return partialLength;
 }
 
-- (NSInteger)segmentAndParameter:(double *)outParameter afterLength:(double)position fractional:(BOOL)positionIsFractionOfTotal
+- (NSInteger)segmentAndParameter:(double *)outParameter afterLength:(double)position fractional:(BOOL)positionIsFractionOfTotal;
 {    
-    subpathWalkingState cursor;
-    const double totalErrorBudget = 0.5;
+    struct subpathWalkingState cursor;
+    const double totalErrorBudget = 0.5f;
     
     if (position <= 0.0) {
         if (outParameter)
-            *outParameter = 0.0;
+            *outParameter = 0.0f;
         return 0;
     }
     if (!initializeSubpathWalkingState(&cursor, self, 0, NO)) {
@@ -1134,7 +1287,7 @@ static double subpathElementLength( subpathWalkingState *iter, double errorBudge
     }
     if (positionIsFractionOfTotal && position >= 1.0) {
         if (outParameter)
-            *outParameter = 1.0;
+            *outParameter = 1.0f;
         return cursor.elementCount - 1;
     }
     
@@ -1143,8 +1296,7 @@ static double subpathElementLength( subpathWalkingState *iter, double errorBudge
         double totalLength;
         NSInteger filledLengths, curLength;
         
-#warning 64BIT: Inspect use of sizeof
-        lengths = malloc((cursor.elementCount+1) * sizeof(lengths));
+        lengths = calloc(cursor.elementCount + 1, sizeof(double));
         filledLengths = 0;
         totalLength = 0;
 
@@ -1196,15 +1348,15 @@ static double subpathElementLength( subpathWalkingState *iter, double errorBudge
             break;
         default:
             OBASSERT_NOT_REACHED("Unexpected Bezier path element");
-            foundParameter = 0.0;
+            foundParameter = 0.0f;
             break;
     }
     
-    *outParameter = ( foundParameter > 1.0 ) ? 1.0 : foundParameter;
+    *outParameter = ( foundParameter > 1.0f ) ? 1.0f : foundParameter;
     return cursor.currentElt;
 }
 
-static NSInteger compareFloat(const void *a_, const void *b_)
+static int compareFloat(const void *a_, const void *b_)
 {
     CGFloat a = *(const CGFloat *)a_;
     CGFloat b = *(const CGFloat *)b_;
@@ -1219,7 +1371,7 @@ static NSInteger compareFloat(const void *a_, const void *b_)
 
 - (BOOL)isClockwise
 {
-    OABezierPathIntersection edge;
+    OABezierPathIntersection *edge = [[OABezierPathIntersection alloc] init];
     BOOL hit;
     NSRect bounds = [self bounds];
     NSInteger elementCount = [self elementCount], elementIndex, coordinateCount, coordinateIndex;
@@ -1229,21 +1381,23 @@ static NSInteger compareFloat(const void *a_, const void *b_)
     /* We can have problems if the "probe" line we use is collinear with a path segment, or a couple of other similar cases. To avoid those, we choose a y-value for our horizontal probe line that goes midway between the largest gap between any points' y-coordinates. */
     
     /* Make a list o all elts' y-coordinates, sort it, and run through the list looking for the widest gap */
-#warning 64BIT: Inspect use of sizeof
     CGFloat *yCoordinates = malloc(sizeof(*yCoordinates) * elementCount);
     coordinateCount = 0;
     for(elementIndex = 0; elementIndex < elementCount; elementIndex ++) {
         NSPoint points[3];
-        NSInteger elt = [self elementAtIndex:elementIndex associatedPoints:points];
+        NSBezierPathElement elt = [self elementAtIndex:elementIndex associatedPoints:points];
         if (elt == NSMoveToBezierPathElement || elt == NSLineToBezierPathElement)
             yCoordinates[coordinateCount ++] = points[0].y;
         else if (elt == NSCurveToBezierPathElement)
             yCoordinates[coordinateCount ++] = points[2].y;
         /* Else, a closepath --- ignore, since its y-coordinate would be a duplicate of some moveto's y-coordinate */
     }
-    if (coordinateCount < 2)
+    if (coordinateCount < 2) {
+        free(yCoordinates);
+        [edge release];
         return YES;  // degenerate path
-#warning 64BIT: Inspect use of sizeof
+    }
+
     qsort(yCoordinates, coordinateCount, sizeof(*yCoordinates), compareFloat);
     
     CGFloat bestGapSize, bestGapMidpoint;
@@ -1253,21 +1407,25 @@ static NSInteger compareFloat(const void *a_, const void *b_)
         CGFloat gap = yCoordinates[coordinateIndex] - yCoordinates[coordinateIndex-1];
         if (gap > bestGapSize) {
             bestGapSize = gap;
-            bestGapMidpoint = ( yCoordinates[coordinateIndex] + yCoordinates[coordinateIndex-1] ) / 2.0;
+            bestGapMidpoint = ( yCoordinates[coordinateIndex] + yCoordinates[coordinateIndex-1] ) / 2.0f;
         }
     }
-    OBASSERT(bestGapSize >= 0.0);
-    if (bestGapSize <= 0)
-        return YES; // another degenerate path
-    
+
     free(yCoordinates);
     
-    hit = [self firstIntersectionWithLine:&edge
+    OBASSERT(bestGapSize >= 0.0);
+    if (bestGapSize <= 0) {
+        [edge release];
+        return YES; // another degenerate path
+    }
+    
+    hit = [self firstIntersectionWithLine:edge
                                 lineStart:(NSPoint){ .x = NSMinX(bounds) - 1, .y = bestGapMidpoint }
                                   lineEnd:(NSPoint){ .x = NSMaxX(bounds) + 1, .y = bestGapMidpoint }];
     OBASSERT(hit);
     if (hit) {
         enum OAIntersectionAspect aspect = (edge.right.parameterDistance < 0)? edge.right.secondAspect : edge.right.firstAspect;
+        [edge release];
         switch(aspect) {
             case intersectionEntryRight:
                 return YES;
@@ -1278,6 +1436,8 @@ static NSInteger compareFloat(const void *a_, const void *b_)
             default:
                 break;
         }
+    } else {
+        [edge release]; // need to release `edge` in the not-hit, unreachable case
     }
 
     // This shouldn't be possible ... 
@@ -1287,18 +1447,17 @@ static NSInteger compareFloat(const void *a_, const void *b_)
 
 // load and save
 
-- (NSMutableDictionary *)propertyListRepresentation
+- (NSMutableDictionary *)propertyListRepresentation;
 {
     NSMutableDictionary *dict = [NSMutableDictionary dictionary];
     NSMutableArray *segments = [NSMutableArray array];
     NSPoint points[3];
-    NSBezierPathElement element;
     NSInteger count = [self elementCount];
     NSInteger i;
 
     for(i=0;i<count;i++) {
         NSMutableDictionary *segment = [NSMutableDictionary dictionary];
-        element = [self elementAtIndex:i associatedPoints:points];
+        NSBezierPathElement element = [self elementAtIndex:i associatedPoints:points];
         
         switch(element) {
             case NSMoveToBezierPathElement:
@@ -1318,9 +1477,6 @@ static NSInteger compareFloat(const void *a_, const void *b_)
                 [segment setObject:NSStringFromPoint(points[1]) forKey:@"control2"];
                 [segment setObject:@"CURVETO" forKey:@"element"];
                 break;
-				
-			default:
-				break;
         }
         [segments addObject:segment];
     }
@@ -1331,8 +1487,8 @@ static NSInteger compareFloat(const void *a_, const void *b_)
 
 - (void)loadPropertyListRepresentation:(NSDictionary *)dict {
     NSArray *segments = [dict objectForKey:@"elements"];
-    NSInteger count = [segments count];
-    NSInteger i;
+    NSInteger i, count = [segments count];
+
     for(i=0;i<count;i++) {
         NSDictionary *segment = [segments objectAtIndex:i];
         NSString *element = [segment objectForKey:@"element"];
@@ -1364,9 +1520,9 @@ static NSInteger compareFloat(const void *a_, const void *b_)
 
 // NSObject overrides
 
-- (BOOL)isEqual:(NSBezierPath *)otherBezierPath
+- (BOOL)isEqual:(NSBezierPath *)otherBezierPath;
 {
-    NSUInteger elementIndex, elementCount = [self elementCount];
+    NSInteger elementIndex, elementCount = [self elementCount];
 
     if (self == otherBezierPath)
         return YES;
@@ -1374,7 +1530,7 @@ static NSInteger compareFloat(const void *a_, const void *b_)
     if (![otherBezierPath isMemberOfClass:[self class]])
         return NO;
 
-    if ((NSUInteger)[otherBezierPath elementCount] != elementCount)
+    if ([otherBezierPath elementCount] != elementCount)
         return NO;
     
     for(elementIndex=0; elementIndex<elementCount; elementIndex++) {
@@ -1401,9 +1557,6 @@ static NSInteger compareFloat(const void *a_, const void *b_)
                 break;
             case NSClosePathBezierPathElement:
                 break;
-				
-			default:
-				break;
         }
     }
 
@@ -1412,7 +1565,6 @@ static NSInteger compareFloat(const void *a_, const void *b_)
 
 static inline NSUInteger _spinLeft(NSUInteger number, NSUInteger spinLeftBitCount)
 {
-#warning 64BIT: Inspect use of sizeof
     const NSUInteger bitsPerUnsignedInt = sizeof(NSUInteger) * 8;
     NSUInteger leftmostBits = number >> (bitsPerUnsignedInt - spinLeftBitCount);
     return (number << spinLeftBitCount) | leftmostBits;
@@ -1424,10 +1576,10 @@ static inline NSUInteger _threeBitsForPoint(NSPoint point)
     return ((NSUInteger)(bothAxes / pow(10.0, floor(log10(bothAxes))))) & 0x7;
 }
 
-- (NSUInteger)hash
+- (NSUInteger)hash;
 {
     NSUInteger hashValue = 0;
-    NSUInteger elementIndex, elementCount = [self elementCount];
+    NSInteger elementIndex, elementCount = [self elementCount];
 
     for(elementIndex=0; elementIndex<elementCount; elementIndex++) {
         NSPoint points[3];
@@ -1460,9 +1612,6 @@ static inline NSUInteger _threeBitsForPoint(NSPoint point)
                 hashValue = _spinLeft(hashValue, 2);
                 hashValue ^= 3;
                 break;
-				
-			default:
-				break;
         }
     }
     return hashValue;
@@ -1498,6 +1647,7 @@ static inline BOOL pdrangeCoversPDrange(double rstart, double rlength, double r2
     return (rstart <= r2start) && (rlength - r2length >= r2start - rstart);
 }
 
+#if 0
 static inline BOOL drangeCoversDrange(double rstart, double rlength, double r2start, double r2length)
 {
     if (r2length < 0)
@@ -1505,6 +1655,7 @@ static inline BOOL drangeCoversDrange(double rstart, double rlength, double r2st
     else
         return drangeCoversPDrange(rstart, rlength, r2start, r2length);
 }
+#endif
 
 static BOOL drangeIntersectsDrange(double r1start, double r1length, double r2start, double r2length)
 {
@@ -1530,6 +1681,7 @@ static inline void combinePDranges(double *r, double *len, double r1, double r1l
     *len = MAX(newDL, newDR);
 }
 
+#if 0
 static inline void combineNDranges(double *r, double *len, double r1, double r1len, double r2, double r2len)
 {
     double newP, newDL, newDR;
@@ -1550,8 +1702,7 @@ static inline void combineDranges(double *r, double *len, double r1, double r1le
     else
         combineNDranges(r, len, r1, r1len, r2, r2len);
 }
-
-#define CLAMP(x, low, high) do{ if((x)<low) (x)=low; else if((x)>high) (x)=high; }while(0)
+#endif
 
 NSString *_roundedStringForPoint(NSPoint point)
 {
@@ -1573,6 +1724,8 @@ static BOOL parameterizedMonotonicCurveBoundsIntersect(const NSPoint *curve1, co
 
 
 // Returns the bounds of a cubic curve for t=0..1. Curve need not be monotonic.
+// Input curve is represented as coefficients.
+// This just converts back to the control-point representation and computes the bounding box of the control+end points.
 static NSRect _parameterizedCurveBounds(const NSPoint *curve) {
     CGFloat minX = curve[0].x;
     CGFloat maxX = curve[0].x;
@@ -1580,14 +1733,14 @@ static NSRect _parameterizedCurveBounds(const NSPoint *curve) {
     CGFloat maxY = curve[0].y;
     NSRect rect;
     NSPoint points[3];
-    NSInteger i;
+    unsigned i;
 
-    points[0].x = curve[0].x + 0.3333* curve[1].x;
-    points[0].y = curve[0].y + 0.3333* curve[1].y;
-    points[1].x = curve[0].x + 0.3333* curve[2].x + 0.6666* curve[1].x;
-    points[1].y = curve[0].y + 0.3333* curve[2].y + 0.6666* curve[1].y;
-    points[2].x = curve[3].x + curve[2].x + curve[1].x + curve[0].x;
-    points[2].y = curve[3].y + curve[2].y + curve[1].y + curve[0].y;
+    points[0].x = (CGFloat)(curve[0].x + 0.3333* curve[1].x);
+    points[0].y = (CGFloat)(curve[0].y + 0.3333* curve[1].y);
+    points[1].x = (CGFloat)(curve[0].x + 0.3333* curve[2].x + 0.6666* curve[1].x);
+    points[1].y = (CGFloat)(curve[0].y + 0.3333* curve[2].y + 0.6666* curve[1].y);
+    points[2].x = (CGFloat)(curve[3].x + curve[2].x + curve[1].x + curve[0].x);
+    points[2].y = (CGFloat)(curve[3].y + curve[2].y + curve[1].y + curve[0].y);
     
     for(i=0;i<3;i++) {
         NSPoint p = points[i];
@@ -1625,11 +1778,11 @@ static inline BOOL looseCubicExceedsBounds(const double *c,
     if (p0 < yMin || p0 > yMax)
         return YES;
     
-    double p1 = c[0] + c[3] * tMax * tMin * tMin + ( c[2] * (tMin + 2 * tMax) * tMin + c[1] * (tMax + 2 * tMin) ) / 3.0;
+    double p1 = c[0] + c[3] * tMax * tMin * tMin + ( c[2] * (tMin + 2 * tMax) * tMin + c[1] * (tMax + 2 * tMin) ) / 3.0f;
     if (p1 < yMin || p1 > yMax)
         return YES;
     
-    double p2 = c[0] + c[3] * tMax * tMax * tMin + ( c[2] * (tMax + 2 * tMin) * tMax + c[1] * (tMin + 2 * tMax) ) / 3.0;
+    double p2 = c[0] + c[3] * tMax * tMax * tMin + ( c[2] * (tMax + 2 * tMin) * tMax + c[1] * (tMin + 2 * tMax) ) / 3.0f;
     if (p2 < yMin || p2 > yMax)
         return YES;
     
@@ -1637,7 +1790,6 @@ static inline BOOL looseCubicExceedsBounds(const double *c,
     if (p3 < yMin || p3 > yMax)
         return YES;
 
-#warning 64BIT: Check formatting arguments
     CDB(NSLog(@"Loose bounds(%g %g) --> %g %g %g %g", tMin, tMax, p0, p1, p2, p3);)
     
     return NO;
@@ -1657,28 +1809,12 @@ static NSRect _bezierCurveToBounds(const NSPoint *c)
 }
 #endif
 
-
-// GPC: get the bounds of a curve segment with the four controls points given.
-
-static NSRect	_boundsOfCurveSegment( const NSPoint startPoint, const NSPoint endPoint, const NSPoint cp1, const NSPoint cp2 )
-{
-    NSPoint low, high;
-    
-    low.x = MIN(MIN(startPoint.x, cp1.x), MIN(cp2.x, endPoint.x));
-    low.y = MIN(MIN(startPoint.y, cp1.y), MIN(cp2.y, endPoint.y));
-    high.x = MAX(MAX(startPoint.x, cp1.x), MAX(cp2.x, endPoint.x));
-    high.y = MAX(MAX(startPoint.y, cp1.y), MAX(cp2.y, endPoint.y));
-    
-    return NSMakeRect(low.x, low.y, high.x - low.x, high.y - low.y);
-}
-
-
-
 // wants 4 coefficients and 3 roots
 // returns the number of distinct solutions
-static NSInteger _solveCubic(const double *c, double *roots, NSInteger *multiplicity) {
+static unsigned _solveCubic(const double *c, double *roots, unsigned *multiplicity)
+{
     // From Graphic Gems 1
-    NSInteger i, num = 0;
+    unsigned num = 0;
     double sub;
     double A,B,C;
     double sq_A, p, q;
@@ -1709,7 +1845,7 @@ static NSInteger _solveCubic(const double *c, double *roots, NSInteger *multipli
             } else if(temp < 0) {
                 num = 0;
             } else {
-                temp = sqrt(temp);
+                temp = (CGFloat)sqrt(temp);
                 roots[0] = (-B-temp)/(2*A);
                 multiplicity[0] = 1;
                 roots[1] = (-B+temp)/(2*A);
@@ -1743,7 +1879,7 @@ static NSInteger _solveCubic(const double *c, double *roots, NSInteger *multipli
             multiplicity[0] = 3;
             num = 1;
         } else {     // one single and one double solution
-            double u = cbrt(-q)/3.;
+            double u = (CGFloat)cbrt(-q)/3.f;
             roots[0] = 2 * u;
             multiplicity[0] = 1;
             roots[1] = -u;
@@ -1751,36 +1887,36 @@ static NSInteger _solveCubic(const double *c, double *roots, NSInteger *multipli
             num = 2;
         }
     } else if (D < 0) { // Casus irreducibilis: three real solutions
-        double phi = 1.0/3 * acos(-q / sqrt(-cb_p));  // the extra factors on p^3 and q cancel
-        double t = 2 * sqrt(-p)/3.;
+        double phi = 1.0f/3 * (CGFloat)acos(-q / (CGFloat)sqrt(-cb_p));  // the extra factors on p^3 and q cancel
+        double t = 2 * (CGFloat)sqrt(-p)/3.f;
 
-        roots[0] = t * cos(phi);
-        roots[1] = -t * cos(phi + M_PI / 3);
-        roots[2] = -t * cos(phi - M_PI / 3);
+        roots[0] = t * (CGFloat)cos(phi);
+        roots[1] = -t * (CGFloat)cos(phi + M_PI / 3);
+        roots[2] = -t * (CGFloat)cos(phi - M_PI / 3);
         multiplicity[0] = 1;
         multiplicity[1] = 1;
         multiplicity[2] = 1;
         num = 3;
     } else {  // One real solution (and a complex conjugate which we ignore)
-        double sqrt_D = sqrt(D);  // 27*sqrt(q^2 + p^3)
-        double u = cbrt(sqrt_D - q);
-        double v = -cbrt(sqrt_D + q);
-        roots[0] = (u + v)/3.;
+        double sqrt_D = (CGFloat)sqrt(D);  // 27*sqrt(q^2 + p^3)
+        double u = (CGFloat)cbrt(sqrt_D - q);
+        double v = -(CGFloat)cbrt(sqrt_D + q);
+        roots[0] = (u + v)/3.f;
         multiplicity[0] = 1;
         num = 1;
     }
 
     // resubstitute
 
-    sub = 1.0/3 * A;
-    for(i=0;i<num;i++) {
+    sub = 1.0f/3 * A;
+    for(unsigned i=0;i<num;i++) {
         roots[i] -= sub;
     }
 
     return num;
 }
 
-static NSInteger findCubicExtrema(const double *c, double *t)
+static unsigned findCubicExtrema(const double *c, double *t)
 {
     // Apply the quadratic formula to the derivative.
     // So A = 3c[3], B = 2c[2], C = c[1]
@@ -1793,7 +1929,7 @@ static NSInteger findCubicExtrema(const double *c, double *t)
         return 1;
     }
     
-    double q = -1 * ( c[2] + copysign(sqrt(surd4), c[2]) );  // q = -1/2 * [ b +- sqrt(b^2 - 4ac) ]
+    double q = -1 * ( c[2] + (CGFloat)copysign((CGFloat)sqrt(surd4), c[2]) );  // q = -1/2 * [ b +- sqrt(b^2 - 4ac) ]
     
     t[0] = q / ( 3 * c[3] );
     t[1] = c[1] / q;
@@ -1819,6 +1955,7 @@ static inline double evaluateCubicSecondDerivative(const double *c, double x)
     return  6 * c[3] * x + 2 * c[2] ;
 }
 
+#if 0
 static inline OAdPoint evaluateCubicPt(const OAdPoint *c, double t)
 {
     return (OAdPoint){
@@ -1826,6 +1963,7 @@ static inline OAdPoint evaluateCubicPt(const OAdPoint *c, double t)
         (( c[3].y * t + c[2].y ) * t + c[1].y ) * t + c[0].y
     };
 }
+#endif
 
 static inline OAdPoint evaluateCubicDerivativePt(const NSPoint *c, double t)
 {
@@ -1838,18 +1976,22 @@ static inline OAdPoint evaluateCubicDerivativePt(const NSPoint *c, double t)
 void _parameterizeLine(NSPoint *coefficients, NSPoint startPoint, NSPoint endPoint) {
     coefficients[0] = startPoint;
     coefficients[1].x = endPoint.x - startPoint.x;
-    coefficients[1].y = endPoint.y - startPoint.y;
+    if (ABS(coefficients[1].x) < FLATNESS)         // this line is horizontal
+        coefficients[1].x = 0;
+    coefficients[1].y = endPoint.y - startPoint.y;  // this line is vertical
+    if (ABS(coefficients[1].y) < FLATNESS)
+        coefficients[1].y = 0;
 }
 
 // Given a curveto's endpoints and control points, compute the coefficients to trace out the curve as p(t) = c[0] + c[1]*t + c[2]*t^2 + c[3]*t^3
 void _parameterizeCurve(NSPoint *coefficients, NSPoint startPoint, NSPoint endPoint, NSPoint controlPoint1, NSPoint controlPoint2) {
     coefficients[0] = startPoint;
-    coefficients[1].x = 3.0 * (controlPoint1.x - startPoint.x);  // 1st tangent
-    coefficients[1].y = 3.0 * (controlPoint1.y - startPoint.y);  // 1st tangent
-    coefficients[2].x = 3.0 * (startPoint.x - 2 * controlPoint1.x + controlPoint2.x);
-    coefficients[2].y = 3.0 * (startPoint.y - 2 * controlPoint1.y + controlPoint2.y);
-    coefficients[3].x = endPoint.x - startPoint.x + 3.0 * ( controlPoint1.x - controlPoint2.x );
-    coefficients[3].y = endPoint.y - startPoint.y + 3.0 * ( controlPoint1.y - controlPoint2.y );
+    coefficients[1].x = (CGFloat)(3.0 * (controlPoint1.x - startPoint.x));  // 1st tangent
+    coefficients[1].y = (CGFloat)(3.0 * (controlPoint1.y - startPoint.y));  // 1st tangent
+    coefficients[2].x = (CGFloat)(3.0 * (startPoint.x - 2 * controlPoint1.x + controlPoint2.x));
+    coefficients[2].y = (CGFloat)(3.0 * (startPoint.y - 2 * controlPoint1.y + controlPoint2.y));
+    coefficients[3].x = (CGFloat)(endPoint.x - startPoint.x + 3.0 * ( controlPoint1.x - controlPoint2.x ));
+    coefficients[3].y = (CGFloat)(endPoint.y - startPoint.y + 3.0 * ( controlPoint1.y - controlPoint2.y ));
 }
 
 // Given a parameterized curve, compute a new parameterized curve that goes from 'start' to 'start+len' along the old one
@@ -1859,15 +2001,15 @@ static inline void splitParameterizedCurve(const NSPoint *c, NSPoint *o, double 
     double start2 = start * start;
     double start3 = start * start * start;
     
-    o[0].x =   c[0].x + c[1].x * start +     c[2].x * start2 +     c[3].x * start3;
-    o[1].x = (          c[1].x +         2 * c[2].x * start  + 3 * c[3].x * start2 ) * len;
-    o[2].x = (                               c[2].x +          3 * c[3].x * start  ) * len2;
-    o[3].x =                                                       c[3].x            * len3;
+    o[0].x = (CGFloat)(  c[0].x + c[1].x * start +     c[2].x * start2 +     c[3].x * start3);
+    o[1].x = (CGFloat)((          c[1].x +         2 * c[2].x * start  + 3 * c[3].x * start2 ) * len);
+    o[2].x = (CGFloat)((                               c[2].x +          3 * c[3].x * start  ) * len2);
+    o[3].x = (CGFloat)(                                                      c[3].x            * len3);
     
-    o[0].y =   c[0].y + c[1].y * start +     c[2].y * start2 +     c[3].y * start3;
-    o[1].y = (          c[1].y +         2 * c[2].y * start  + 3 * c[3].y * start2 ) * len;
-    o[2].y = (                               c[2].y +          3 * c[3].y * start  ) * len2;
-    o[3].y =                                                       c[3].y            * len3;
+    o[0].y = (CGFloat)(  c[0].y + c[1].y * start +     c[2].y * start2 +     c[3].y * start3);
+    o[1].y = (CGFloat)((          c[1].y +         2 * c[2].y * start  + 3 * c[3].y * start2 ) * len);
+    o[2].y = (CGFloat)((                               c[2].y +          3 * c[3].y * start  ) * len2);
+    o[3].y = (CGFloat)(                                                      c[3].y            * len3);
 }
 
 // Applies an affine transform to the cubic's parameter (not to the cubic's values); ie, substitute t = (a*t' + b)
@@ -1894,25 +2036,23 @@ static void parameterizedLineFromCurveSecant(NSPoint *l, const NSPoint *c, doubl
 #endif
 
 // Given a parameterized curve c and a parameterized line a, return up to 3 intersections.
-NSInteger intersectionsBetweenCurveAndLine(const NSPoint *c, const NSPoint *a, struct intersectionInfo *results)
+unsigned intersectionsBetweenCurveAndLine(const NSPoint *c, const NSPoint *a, struct intersectionInfo *results)
 {
-    NSInteger i;
     double xcubic[4], ycubic[4];
     double roots[3];
-    NSInteger multiplicity[3];
-    NSInteger count;
+    unsigned multiplicity[3];
     
     // Transform the problem so that the line segment goes from (0,0) to (1,0)
     // (this simplifies the math, and gets rid of the troublesome horizontal / vertical cases)
     xcubic[0] = c[0].x - a[0].x, ycubic[0] = c[0].y - a[0].y;
-    for(i = 1; i < 4; i++)
+    for(unsigned i = 1; i < 4; i++)
         xcubic[i] = c[i].x, ycubic[i] = c[i].y;
     double lineLengthSquared = a[1].x*a[1].x + a[1].y*a[1].y;
     if (lineLengthSquared < EPSILON*EPSILON) {
         return 0;
         // TODO: Handle a single point on a curve?
     }
-    for(i = 0; i < 4; i++) {
+    for(unsigned i = 0; i < 4; i++) {
         double x =   xcubic[i] * a[1].x + ycubic[i] * a[1].y;
         double y = - xcubic[i] * a[1].y + ycubic[i] * a[1].x;
         xcubic[i] = x / lineLengthSquared;
@@ -1920,7 +2060,7 @@ NSInteger intersectionsBetweenCurveAndLine(const NSPoint *c, const NSPoint *a, s
     }
     
     // Solve for y==0
-    count = _solveCubic(ycubic, roots, multiplicity);
+    unsigned count = _solveCubic(ycubic, roots, multiplicity);
     
     // Sort the results, since callers require intersections to be returned in order of increasing leftParameter
     if (count > 1) {
@@ -1932,8 +2072,8 @@ NSInteger intersectionsBetweenCurveAndLine(const NSPoint *c, const NSPoint *a, s
             if (roots[0] > roots[2]) {
                 double r1 = roots[0];
                 double r2 = roots[1];
-                NSInteger m1 = multiplicity[0];
-                NSInteger m2 = multiplicity[1];
+                unsigned m1 = multiplicity[0];
+                unsigned m2 = multiplicity[1];
                 roots[0] = roots[2];
                 roots[1] = r1;
                 roots[2] = r2;
@@ -1947,10 +2087,10 @@ NSInteger intersectionsBetweenCurveAndLine(const NSPoint *c, const NSPoint *a, s
         }
     }
     
-    NSInteger resultCount = 0;
+    unsigned resultCount = 0;
     
-    for(i=0;i<count;i++) {
-        CGFloat u = roots[i];
+    for(unsigned i=0;i<count;i++) {
+        double u = roots[i];
         
         if (u < -0.0001 || u > 1.0001) {
             continue;
@@ -2002,10 +2142,7 @@ NSInteger intersectionsBetweenCurveAndLine(const NSPoint *c, const NSPoint *a, s
                 results[resultCount].leftExitAspect = aspect;
                 break;
             }
- 				
-			default:
-				break;
-       }
+        }
         
         resultCount++;
     }
@@ -2015,14 +2152,13 @@ NSInteger intersectionsBetweenCurveAndLine(const NSPoint *c, const NSPoint *a, s
 
 #if 0
 #warning 64BIT: Check formatting arguments
-#warning 64BIT: Check formatting arguments
 #define dlog(expr) printf("%s:%d: %s = %g\n", __func__, __LINE__, #expr, (expr));
 #else
 #define dlog(expr) /* */
 #endif
 
 // Given a parameterized curve c, return at most 1 intersection.
-NSInteger intersectionsBetweenCurveAndSelf(const NSPoint *c, struct intersectionInfo *results)
+unsigned intersectionsBetweenCurveAndSelf(const NSPoint *c, struct intersectionInfo *results)
 {
     /*
      We want to find all pairs of parameters such that bezier(t1) == bezier(t2) and t1 != t2. We can recast that as finding t, d such that bezier(t+d) == bezier(t-d) and d>0. Churning through the algebra, we get
@@ -2080,7 +2216,7 @@ NSInteger intersectionsBetweenCurveAndSelf(const NSPoint *c, struct intersection
     if (dsquared <= 0)
         return 0;
     
-    double d = sqrt(dsquared);
+    double d = (CGFloat)sqrt(dsquared);
     dlog(d);
     
     // No self-intersection if either (t+d) or (t-d) are outside the range 0..1
@@ -2130,7 +2266,7 @@ static inline enum OAIntersectionAspect lineAspect(OAdPoint tangent, double offs
     }
 }
 
-static inline double dotprod(CGFloat x, CGFloat y, NSPoint xy0, NSPoint xy1)
+static inline double dotprod(double x, double y, NSPoint xy0, NSPoint xy1)
 {
     return (x - xy0.x) * xy1.x + (y - xy0.y) * xy1.y;
 }
@@ -2143,16 +2279,16 @@ static inline double vecmag(double a, double b)
 // This returns (a/b), clipping the result to 1.
 // (Safely returns 1 for the (0/0) case as well.)
 // Caller assures that a/b is not negative.
-static inline double clip_div(double dotproduct, double vec_mag)
+static inline double clip_div(double dotproduct, double vecmag)
 {
-    if (fabs(dotproduct) >= fabs(vec_mag))
-        return 1.0;
+    if (fabs(dotproduct) >= fabs(vecmag))
+        return 1.0f;
     else
-        return dotproduct / vec_mag;
+        return dotproduct / vecmag;
 }
 
 // Given two lines l1, l2: return zero or one intersections. May return intersections with nonzero distance.
-NSInteger intersectionsBetweenLineAndLine(const NSPoint *l1, const NSPoint *l2, struct intersectionInfo *results)
+unsigned intersectionsBetweenLineAndLine(const NSPoint *l1, const NSPoint *l2, struct intersectionInfo *results)
 {
     double pdet, vdet, other_pdet;
         
@@ -2284,13 +2420,11 @@ NSInteger intersectionsBetweenLineAndLine(const NSPoint *l1, const NSPoint *l2, 
 }
 
 // This is used by intersectionsBetweenCurveAndCurve[Monotonic]() to combine the results of the recursive subdivision
-static NSInteger mergeSortIntersectionInfo(struct intersectionInfo *buf, NSInteger count1, NSInteger count2, double leftBoundary, double rightBoundary)
+static unsigned mergeSortIntersectionInfo(struct intersectionInfo *buf, unsigned count1, unsigned count2, double leftBoundary, double rightBoundary)
 {
-	#pragma unused(leftBoundary, rightBoundary)
-	
     // Even though this is a mergesort, it's still pretty much O(N^2), because the memmove() is O(N). However, N is quite small.
 #define MEPSILON 1e-8
-    NSInteger returned;
+    unsigned returned;
     returned = 0;
     while (count1 > 0 && count2 > 0) {
         // Combine duplicate entries: this often happens at the edge of a sliced-up segment
@@ -2331,8 +2465,8 @@ static NSInteger mergeSortIntersectionInfo(struct intersectionInfo *buf, NSInteg
 static inline void shrinkIntervalToRoots(const double poly[4], double *min, double *max)
 {
     double roots[3];
-    NSInteger dummy[3];
-    NSInteger count, root;
+    unsigned dummy[3];
+    unsigned count, root;
     
     count = _solveCubic(poly, roots, dummy);
     for(root = 0; root < count; root ++) {
@@ -2365,8 +2499,8 @@ static BOOL extendGrazingIntersection(const NSPoint *c1coeff, const NSPoint *c2c
     // Project both vectors onto an intermediate vector and find the ratio of the magnitudes of the projections along this axis; multiply each curve's t-parameter by the other curve's tangent-vector-magnitude so that the shared curves have the same tangent vector (or as close as possible)
     // If you use the sum of the vectors as the intermediate vector, then the math gets pretty simple (if the vectors are antiparallel, then negate one of them before summing)
     // the copysign+fabs below makes sure that the ratio has the right sign, but rightRate is positive, so that the Tshared parameter moves in the same direction as the left curve's t parameter: makes things easier later
-    double leftRate = copysign(c1tangentmag2, c1dotc2) + c1dotc2;
-    double rightRate = c2tangentmag2 + fabs(c1dotc2);
+    double leftRate = (CGFloat)copysign(c1tangentmag2, c1dotc2) + c1dotc2;
+    double rightRate = c2tangentmag2 + (CGFloat)fabs(c1dotc2);
         
     // Transform the curves to use a new, shared t-parameter which is offset and scaled from the original, so that at t' = 0, the curves have the same value (this is the intersection that was passed in) and the same tangent vectors (due to the scaling)
     // T_left = T' * rightRate + leftParameter, T_right = T' * leftRate + rightParameter
@@ -2397,8 +2531,7 @@ static BOOL extendGrazingIntersection(const NSPoint *c1coeff, const NSPoint *c2c
     OBASSERT(TsharedMax >= -EPSILON);
     
     double errVectorX[4], errVectorY[4];
-    NSInteger ix;
-    for(ix = 0; ix < 4; ix++) { errVectorX[ix] = c1[ix].x - c2[ix].x; errVectorY[ix] = c1[ix].y - c2[ix].y; } 
+    for(unsigned ix = 0; ix < 4; ix++) { errVectorX[ix] = c1[ix].x - c2[ix].x; errVectorY[ix] = c1[ix].y - c2[ix].y; } 
     
     // NSLog(@"errvec: origin=(%g,%g) deriv=(%g,%g)", errVectorX[0], errVectorY[0], evaluateCubicDerivative(errVectorX, 0), evaluateCubicDerivative(errVectorY, 0));
     
@@ -2435,7 +2568,7 @@ static BOOL extendGrazingIntersection(const NSPoint *c1coeff, const NSPoint *c2c
     }
 
     // Transform our shrunken bounds back onto the original curves' t-parameters.
-#if defined(DEBUGGING_CURVE_INTERSECTIONS)
+#if DEBUGGING_CURVE_INTERSECTIONS
     double oldLeft = i->leftParameter, oldRight = i->rightParameter;
 #endif
     double newStart, newEnd;
@@ -2447,8 +2580,8 @@ static BOOL extendGrazingIntersection(const NSPoint *c1coeff, const NSPoint *c2c
     OBASSERT(newStart <= 1+EPSILON);
     OBASSERT(newEnd >= 0-EPSILON);
     OBASSERT(newEnd <= 1+EPSILON);
-    CLAMP(newStart, 0, 1);
-    CLAMP(newEnd, 0, 1);
+    newStart = CLAMP(newStart, 0, 1);
+    newEnd = CLAMP(newEnd, 0, 1);
     i->leftParameter = newStart;
     i->leftParameterDistance = newEnd - newStart;
     OBASSERT(i->leftParameterDistance >= 0.0);
@@ -2459,14 +2592,13 @@ static BOOL extendGrazingIntersection(const NSPoint *c1coeff, const NSPoint *c2c
     
     newStart = TsharedMin * leftRate + i->rightParameter;
     newEnd = TsharedMax * leftRate + i->rightParameter;
-#warning 64BIT: Check formatting arguments
     CDB(NSLog(@"T'(%g %g) --> t_right(%g %g) or 1+(%g %g)", TsharedMin, TsharedMax, newStart, newEnd, newStart-1, newEnd-1);)
     OBASSERT(newStart >= 0-EPSILON);
     OBASSERT(newStart <= 1+EPSILON);
     OBASSERT(newEnd >= 0-EPSILON);
     OBASSERT(newEnd <= 1+EPSILON);
-    CLAMP(newStart, 0, 1);
-    CLAMP(newEnd, 0, 1);
+    newStart = CLAMP(newStart, 0, 1);
+    newEnd = CLAMP(newEnd, 0, 1);
     i->rightParameter = newStart;
     i->rightParameterDistance = newEnd - newStart;
     
@@ -2490,16 +2622,15 @@ static BOOL extendGrazingIntersection(const NSPoint *c1coeff, const NSPoint *c2c
 
 // The inner loop of the curve-curve intersection algorithm. Curves are subdivided into segments and the segments are recursively compared. If a segment is flat enough, it can be treated as a line and intersected using intersectionsBetweenCurveAndLine(). If a segment is far enough away from other segments, it doesn't need to be compared at all.
 // The previousResults parameter is scanned for previously-found grazing intersections, which we use to short-circuit subdivision inside the grazing region.
-static NSInteger intersectionsBetweenCurveAndCurveMonotonic(const NSPoint *c1coeff, const NSPoint *c2coeff,
+static unsigned intersectionsBetweenCurveAndCurveMonotonic(const NSPoint *c1coeff, const NSPoint *c2coeff,
                                                       double c1Low, double c1Size,
                                                       double c2Low, double c2Size,
                                                       struct intersectionInfo *results,
                                                       struct intersectionInfo *previousResults)
 {
 #if defined(DEBUGGING_CURVE_INTERSECTIONS)
-    static NSInteger indent;
-    NSInteger qq;
-    for(qq = 0; qq < indent; qq++)
+    static int indent;
+    for(int qq = 0; qq < indent; qq++)
         putchar(' ');
 #endif
     
@@ -2576,8 +2707,7 @@ static NSInteger intersectionsBetweenCurveAndCurveMonotonic(const NSPoint *c1coe
     CDB(printf("errbs=(%g,%g)", error_bound_left, error_bound_right);)
     
     if (error_bound_left < FLATNESS || error_bound_right < FLATNESS) {
-        NSInteger found;
-        NSInteger fixup;
+        unsigned found, fixup;
         NSPoint l2[2];
         
         // Yup, looks like a line. Compute the parameterized line representation and use that.
@@ -2587,8 +2717,7 @@ static NSInteger intersectionsBetweenCurveAndCurveMonotonic(const NSPoint *c1coe
             l2[1].x = right[1].x + right[2].x + right[3].x;
             l2[1].y = right[1].y + right[2].y + right[3].y;
             found = intersectionsBetweenCurveAndLine(left, l2, results);
-#warning 64BIT: Check formatting arguments
-            CDB(printf(" found %d via right linearization", found);)
+            CDB(printf(" found %u via right linearization", found);)
         } else {
             // Same as above, but the left-hand curve was flatter.
             l2[0] = left[0];
@@ -2597,15 +2726,12 @@ static NSInteger intersectionsBetweenCurveAndCurveMonotonic(const NSPoint *c1coe
             found = intersectionsBetweenCurveAndLine(right, l2, results);
             for(fixup = 0; fixup < found; fixup++)
                 reverseSenseOfIntersection(&(results[fixup]));
-#warning 64BIT: Check formatting arguments
-            CDB(printf(" found %d via left  linearization", found);)
+            CDB(printf(" found %u via left  linearization", found);)
         }
     
         // TODO: We could probably do a newton-raphson step here to get a few more digits of accuracy?
 
-#warning 64BIT: Check formatting arguments
         CDB(printf(": (%g%+g, %g%+g)\n", l2[0].x, l2[1].x, l2[0].y, l2[1].y);)
-        
         
         for(fixup = 0; fixup < found; fixup++) {
             results[fixup].leftParameter = results[fixup].leftParameter * c1Size + c1Low;
@@ -2626,14 +2752,14 @@ static NSInteger intersectionsBetweenCurveAndCurveMonotonic(const NSPoint *c1coe
     indent ++;
 #endif
     
-    NSInteger foundLow, foundHigh, foundFirstHalf, foundSecondHalf, foundTotal;
+    unsigned foundLow, foundHigh, foundFirstHalf, foundSecondHalf, foundTotal;
     
     // Subdivide each curve, and find intersections with each half. Eventually we'll either find a fragment that's flat enough to treat as a line, or we'll discover it's outside of the other curve's bounding box.
     foundLow  = intersectionsBetweenCurveAndCurveMonotonic(c1coeff, c2coeff, c1Low, c1Size / 2, c2Low, c2Size/2, results, previousResults);
     foundHigh = intersectionsBetweenCurveAndCurveMonotonic(c1coeff, c2coeff, c1Low, c1Size / 2, c2Low + c2Size/2, c2Size/2, results + foundLow, previousResults);
     foundFirstHalf = mergeSortIntersectionInfo(results, foundLow, foundHigh, -1, c2Low + c2Size/2);
 #if defined(DEBUGGING_CURVE_INTERSECTIONS)
-    NSInteger f0 = foundLow, fh0 = foundHigh;
+    unsigned f0 = foundLow, fh0 = foundHigh;
 #endif
         
     foundLow  = intersectionsBetweenCurveAndCurveMonotonic(c1coeff, c2coeff, c1Low + c1Size / 2, c1Size / 2, c2Low, c2Size/2, results + foundFirstHalf, previousResults);
@@ -2644,11 +2770,9 @@ static NSInteger intersectionsBetweenCurveAndCurveMonotonic(const NSPoint *c1coe
 #if defined(DEBUGGING_CURVE_INTERSECTIONS)
     indent --;
     
-    for(qq = 0; qq < indent; qq++)
+    for(int qq = 0; qq < indent; qq++)
         putchar(' ');
-#warning 64BIT: Check formatting arguments
-#warning 64BIT: Check formatting arguments
-    printf("found %d %d %d %d -> %d %d -> %d\n", f0, fh0, foundLow, foundHigh, foundFirstHalf, foundSecondHalf, foundTotal);
+    printf("found %u %u %u %u -> %u %u -> %u\n", f0, fh0, foundLow, foundHigh, foundFirstHalf, foundSecondHalf, foundTotal);
 #endif
     
     OBASSERT(foundTotal <= MAX_INTERSECTIONS_PER_ELT_PAIR);
@@ -2662,12 +2786,12 @@ struct curveSegment {
 };
 
 /* Given a parameterized cubic curve, this computes the segments (in order) of the curve such that each segment is monotonic in X and Y, that is, it does not turn back on itself. This makes the logic in intersectionsBetweenCurveAndCurveMonotonic() simpler because the bounding box of a curve segment becomes just the box of its endpoints. */
-static NSInteger computeCurveSegments(const NSPoint *coeff, struct curveSegment segments[5])
+static unsigned computeCurveSegments(const NSPoint *coeff, struct curveSegment segments[5])
 {
     double tvalues[4];
     double c[4];
-    NSInteger tvcount, tvindex;
-    NSInteger segcount;
+    unsigned tvcount, tvindex;
+    unsigned segcount;
     double tStart, nextT;
     
     c[0] = coeff[0].x;
@@ -2687,7 +2811,7 @@ static NSInteger computeCurveSegments(const NSPoint *coeff, struct curveSegment 
     tStart = 0;
 
     while (tStart < 1.0) {
-        nextT = 1.0;
+        nextT = 1.0f;
         for(tvindex = 0; tvindex < tvcount; tvindex ++) {
             if (tvalues[tvindex] > tStart && tvalues[tvindex] < nextT)
                 nextT = tvalues[tvindex];
@@ -2696,16 +2820,11 @@ static NSInteger computeCurveSegments(const NSPoint *coeff, struct curveSegment 
         tStart = nextT;
     }
 
-#if defined(DEBUGGING_CURVE_INTERSECTIONS)
+#if DEBUGGING_CURVE_INTERSECTIONS
     {
-        NSInteger q;
         NSMutableString *s = [NSMutableString string];
-        for(q = 0; q < segcount; q++)
-#warning 64BIT: Check formatting arguments
-#warning 64BIT: Check formatting arguments
+        for(unsigned q = 0; q < segcount; q++)
             [s appendFormat:@"  %g%+g", segments[q].start, segments[q].size];
-#warning 64BIT: Check formatting arguments
-#warning 64BIT: Check formatting arguments
         NSLog(@"Curve segments(%d): %@", segcount, s);
     }
 #endif
@@ -2713,9 +2832,103 @@ static NSInteger computeCurveSegments(const NSPoint *coeff, struct curveSegment 
     return segcount;
 }
 
-static NSInteger coalesceExtendedIntersections(struct intersectionInfo *results, NSInteger found)
+/*
+ Given a non-parameterized cubic curve (i.e, control points), compute the tight bounding box of the curve.
+ This is equivalent to parameterizing it, calling computeCurveSegments() above, and then computing the bounding box of each segment. (But more efficient.)
+ The bounding box in 'r' is extended to include the bounds. If the box is modified (incl. if it was a zero rect to start with) then this function returns YES, otherwise NO.
+ The input control points are in the order (start, c1, c2, end).
+*/
+#define INCLUDE(minC, maxC, aC, clearance) do { double value = (aC); \
+    if (value-clearance < minC) { /* NSLog(@"%g < %g (%s)", value-clearance, minC, #minC); */ minC = value-clearance; modified = YES; } \
+    if (value+clearance > maxC) { /* NSLog(@"%g > %g (%s)", value+clearance, maxC, #maxC); */ maxC = value+clearance; modified = YES; } \
+    } while(0)
+
+static BOOL inline isIncluded(double min, double max, double p, double clearance)
 {
-    NSInteger i, j;
+    return (p-clearance >= min && p+clearance <= max);
+}
+
+BOOL tightBoundsOfCurveTo(NSRect *rectp, NSPoint startPoint, NSPoint controlPoint1, NSPoint controlPoint2, NSPoint endPoint, CGFloat sideClearance)
+{
+    BOOL modified;
+    double minX, maxX, minY, maxY;
+    
+    if (rectp->size.width <= 0 || rectp->size.height <= 0) {
+        /* If passed an empty rect, initialize it from our start and end points */
+        minX = MIN(startPoint.x, endPoint.x);
+        minY = MIN(startPoint.y, endPoint.y);
+        maxX = MAX(startPoint.x, endPoint.x);
+        maxY = MAX(startPoint.y, endPoint.y);
+        modified = YES;
+    } else {
+        /* convert input rect to min/max form */
+        minX = NSMinX(*rectp);
+        minY = NSMinY(*rectp);
+        maxX = NSMaxX(*rectp);
+        maxY = NSMaxY(*rectp);
+        modified = NO;
+        
+        /* Make sure the endpoints are included */
+        INCLUDE(minX, maxX, startPoint.x, 0);
+        INCLUDE(minX, maxX, endPoint.x, 0);
+        INCLUDE(minY, maxY, startPoint.y, 0);
+        INCLUDE(minY, maxY, endPoint.y, 0);
+    }
+        
+    /* Short-circuit if the control points are in the rect */
+    /* (this is pretty common in practice) */
+    if(isIncluded(minX, maxX, controlPoint1.x, sideClearance) &&
+       isIncluded(minX, maxX, controlPoint2.x, sideClearance) &&
+       isIncluded(minY, maxY, controlPoint1.y, sideClearance) &&
+       isIncluded(minY, maxY, controlPoint2.y, sideClearance)) {
+        goto finis;
+    }
+    
+    /* Convert to parametric form and find the extreme points using findCubicExtrema() */
+    /* Note that findCubicExtrema() will happily return extremes outside the range [0,1], which we want to ignore */
+    NSPoint coefficientPoints[4];
+    _parameterizeCurve(coefficientPoints, startPoint, endPoint, controlPoint1, controlPoint2);
+    
+    double  coefficients[4], tvalues[2];
+    unsigned tvcount;
+    
+    /* Check the x-extrema */
+    coefficients[0] = coefficientPoints[0].x;
+    coefficients[1] = coefficientPoints[1].x;
+    coefficients[2] = coefficientPoints[2].x;
+    coefficients[3] = coefficientPoints[3].x;
+    tvcount = findCubicExtrema(coefficients, tvalues);
+    if (tvcount >= 1 && tvalues[0] > 0 && tvalues[0] < 1)
+        INCLUDE(minX, maxX, evaluateCubic(coefficients, tvalues[0]), sideClearance);
+    if (tvcount >= 2 && tvalues[1] > 0 && tvalues[1] < 1)
+        INCLUDE(minX, maxX, evaluateCubic(coefficients, tvalues[1]), sideClearance);
+    
+    /* and the y-extrema */
+    coefficients[0] = coefficientPoints[0].y;
+    coefficients[1] = coefficientPoints[1].y;
+    coefficients[2] = coefficientPoints[2].y;
+    coefficients[3] = coefficientPoints[3].y;
+    tvcount = findCubicExtrema(coefficients, tvalues);
+    if (tvcount >= 1 && tvalues[0] > 0 && tvalues[0] < 1)
+        INCLUDE(minY, maxY, evaluateCubic(coefficients, tvalues[0]), sideClearance);
+    if (tvcount >= 2 && tvalues[1] > 0 && tvalues[1] < 1)
+        INCLUDE(minY, maxY, evaluateCubic(coefficients, tvalues[1]), sideClearance);
+    
+finis:
+    if (modified) {
+        /* convert back to origin+size representation for the caller */
+        rectp->origin.x = (CGFloat)minX;
+        rectp->origin.y = (CGFloat)minY;
+        rectp->size.width = (CGFloat)(maxX - minX);
+        rectp->size.height = (CGFloat)(maxY - minY);
+        return YES;
+    } else
+        return NO;
+}
+
+static unsigned coalesceExtendedIntersections(struct intersectionInfo *results, unsigned found)
+{
+    unsigned i, j;
     
     for(i = 0; i+1 < found; i++) {
         for(j = i+1; j < found; j++) {
@@ -2726,7 +2939,6 @@ static NSInteger coalesceExtendedIntersections(struct intersectionInfo *results,
                 drangeIntersectsDrange(results[i].rightParameter, results[i].rightParameterDistance, results[j].rightParameter, results[j].rightParameterDistance) &&
                 signbit(results[i].rightParameterDistance) == signbit(results[j].rightParameterDistance)) {
                 
-#warning 64BIT: Check formatting arguments
 #warning 64BIT: Check formatting arguments
                 CDB(printf("combining %d:[%g%+g %g%+g] %s-%s and %d:[%g%+g %g%+g] %s-%s ",
                            i, results[i].leftParameter, results[i].leftParameterDistance, results[i].rightParameter, results[i].rightParameterDistance,
@@ -2739,7 +2951,7 @@ static NSInteger coalesceExtendedIntersections(struct intersectionInfo *results,
                                 results[j].leftParameter, results[j].leftParameterDistance);
                 
                 // This is combineDranges(), but we need to carry the intersection aspects along with the combined ranges
-                double newStart, newEnd;
+                double  newStart, newEnd;
                 if (results[i].rightParameterDistance >= 0) {
                     if (results[i].rightParameter > results[j].rightParameter) {
                         newStart = results[j].rightParameter;
@@ -2770,8 +2982,6 @@ static NSInteger coalesceExtendedIntersections(struct intersectionInfo *results,
                 results[i].rightParameter = newStart;
                 results[i].rightParameterDistance = newEnd - newStart;
                 
-#warning 64BIT: Check formatting arguments
-#warning 64BIT: Check formatting arguments
                 CDB(printf("into [%g%+g %g%+g] %s-%s\n", results[i].leftParameter, results[i].leftParameterDistance, results[i].rightParameter, results[i].rightParameterDistance, straspect(results[i].leftEntryAspect), straspect(results[i].leftExitAspect));)
                     
 #warning 64BIT: Inspect use of sizeof
@@ -2787,12 +2997,12 @@ static NSInteger coalesceExtendedIntersections(struct intersectionInfo *results,
 
 
 // This is the entry point for curve-curve intersection. Break up each curve into monotonic segments. Compute all intersections, including finding grazing regions. Then compute the aspect of the grazing regions (after any coalescing has happened).
-NSInteger intersectionsBetweenCurveAndCurve(const NSPoint *c1coefficients, const NSPoint *c2coefficients, struct intersectionInfo *results)
+unsigned intersectionsBetweenCurveAndCurve(const NSPoint *c1coefficients, const NSPoint *c2coefficients, struct intersectionInfo *results)
 {
     struct curveSegment leftSegments[5], rightSegments[5];
-    NSInteger leftSegmentCount, rightSegmentCount;
-    NSInteger leftSegmentIndex, rightSegmentIndex;
-    NSInteger found;
+    unsigned leftSegmentCount, rightSegmentCount;
+    unsigned leftSegmentIndex, rightSegmentIndex;
+    unsigned found;
     
     /* Break the input curves into segments (up to five) so that each segment is monotonic in x and y in the range t=0...1. */
     leftSegmentCount = computeCurveSegments(c1coefficients, leftSegments);
@@ -2801,7 +3011,7 @@ NSInteger intersectionsBetweenCurveAndCurve(const NSPoint *c1coefficients, const
     found = 0;
     for(leftSegmentIndex = 0; leftSegmentIndex < leftSegmentCount; leftSegmentIndex ++) {
         for(rightSegmentIndex = 0; rightSegmentIndex < rightSegmentCount; rightSegmentIndex ++) {
-            NSInteger foundMore;
+            unsigned foundMore;
             // printf("Segment %d/%d %d/%d\n", leftSegmentIndex, leftSegmentCount, rightSegmentIndex, rightSegmentCount);
             foundMore = intersectionsBetweenCurveAndCurveMonotonic(c1coefficients, c2coefficients,
                                                                    leftSegments[leftSegmentIndex].start, leftSegments[leftSegmentIndex].size,
@@ -2816,13 +3026,14 @@ NSInteger intersectionsBetweenCurveAndCurve(const NSPoint *c1coefficients, const
     return found;
 }
 
-- (BOOL)_curvedIntersection:(CGFloat *)length time:(CGFloat *)tim curve:(NSPoint *)c line:(NSPoint *)a {
+- (BOOL)_curvedIntersection:(CGFloat *)length time:(CGFloat *)time curve:(NSPoint *)c line:(NSPoint *)a
+{
     NSInteger i;
-    double cubic[4];
-    double roots[3];
-    NSInteger dummy[3];
+    double  cubic[4];
+    double  roots[3];
+    unsigned dummy[3];
     NSInteger count;
-    CGFloat minT = 1.1;
+    CGFloat minT = 1.1f;
     BOOL foundOne = NO;
     
     for(i=0;i<4;i++) {
@@ -2833,7 +3044,7 @@ NSInteger intersectionsBetweenCurveAndCurve(const NSPoint *c1coefficients, const
     count = _solveCubic(cubic, roots, dummy);
     
     for(i=0;i<count;i++) {
-        CGFloat u = roots[i];
+        CGFloat u = (CGFloat)roots[i];
         CGFloat t;
         
         if (u < -0.0001 || u > 1.0001) {
@@ -2861,7 +3072,7 @@ NSInteger intersectionsBetweenCurveAndCurve(const NSPoint *c1coefficients, const
         if (t < minT) {
             foundOne = YES;
             minT = t;
-            *tim = u;
+            *time = u;
         }
     }
     
@@ -2877,7 +3088,7 @@ NSInteger intersectionsBetweenCurveAndCurve(const NSPoint *c1coefficients, const
     return NO;
 }
 
-BOOL initializeSubpathWalkingState( subpathWalkingState *s, NSBezierPath *p, NSInteger startIndex, BOOL implicitClosepath)
+BOOL initializeSubpathWalkingState(struct subpathWalkingState *s, NSBezierPath *p, NSInteger startIndex, BOOL implicitClosepath)
 {
     NSInteger pathElementCount = [p elementCount];
     
@@ -2900,7 +3111,7 @@ BOOL initializeSubpathWalkingState( subpathWalkingState *s, NSBezierPath *p, NSI
     return YES;
 }
 
-BOOL nextSubpathElement( subpathWalkingState *s)
+BOOL nextSubpathElement(struct subpathWalkingState *s)
 {
     switch(s->what) {
         default:
@@ -2969,7 +3180,7 @@ BOOL nextSubpathElement( subpathWalkingState *s)
 }
 
 // This predicts whether nextSubpathElement() would return YES or NO on the next call
-BOOL hasNextSubpathElement( subpathWalkingState *s)
+BOOL hasNextSubpathElement(struct subpathWalkingState *s)
 {
     if (s->what == NSClosePathBezierPathElement)
         return NO;
@@ -2988,7 +3199,7 @@ BOOL hasNextSubpathElement( subpathWalkingState *s)
     return YES;
 }
 
-void repositionSubpathWalkingState( subpathWalkingState *s, NSInteger toIndex)
+void repositionSubpathWalkingState(struct subpathWalkingState *s, NSInteger toIndex)
 {
     if (toIndex == 0) {
         initializeSubpathWalkingState(s, s->pathBeingWalked, 0, s->possibleImplicitClosepath);
@@ -3026,8 +3237,8 @@ static BOOL _straightLineIntersectsRect(const NSPoint *a, NSRect rect) {
         return YES;
     }
     if (a[1].x != 0) {
-        CGFloat t = (NSMinX(rect) - a[0].x)/a[1].x;
-        CGFloat y;
+        double t = (NSMinX(rect) - a[0].x)/a[1].x;
+        double y;
         if (t >= 0 && t <= 1) {
             y = t * a[1].y + a[0].y;
             if (y >= NSMinY(rect) && y < NSMaxY(rect)) {
@@ -3043,8 +3254,8 @@ static BOOL _straightLineIntersectsRect(const NSPoint *a, NSRect rect) {
         }
     }
     if (a[1].y != 0) {
-        CGFloat t = (NSMinY(rect) - a[0].y)/a[1].y;
-        CGFloat x;
+        double t = (NSMinY(rect) - a[0].y)/a[1].y;
+        double x;
         if (t >= 0 && t <= 1) {
             x = t * a[1].x + a[0].x;
             if (x >= NSMinX(rect) && x < NSMaxX(rect)) {
@@ -3142,15 +3353,15 @@ static BOOL _curvedLineIntersectsRect(const NSPoint *c, NSRect rect, CGFloat tol
 
 - (BOOL)_curvedLineHit:(NSPoint)point startPoint:(NSPoint)startPoint endPoint:(NSPoint)endPoint controlPoint1:(NSPoint)controlPoint1 controlPoint2:(NSPoint)controlPoint2 position:(CGFloat *)position padding:(CGFloat)padding
 {
-	// find the square of the distance between the point and a point
+    // find the square of the distance between the point and a point
     // on the curve (u).
     // use newtons method to approach the minumum u.
     NSPoint a[4];     // our regular coefficients
-    double c[7];  // a cubic squared gives us 7 coefficients
-    double u, bestU;
+    double  c[7];  // a cubic squared gives us 7 coefficients
+    double  u, bestU;
 
-    double tolerance = padding + [self lineWidth] / 2;
-    double delta, minDelta;
+    double  tolerance = padding + [self lineWidth] / 2;
+    double  delta, minDelta;
     NSInteger i;
         
 //    if (tolerance < 3) {
@@ -3172,7 +3383,7 @@ static BOOL _curvedLineIntersectsRect(const NSPoint *c, NSRect rect, CGFloat tol
                 a[1].y * a[2].y + (a[0].y - point.y) * a[3].y);
     c[4] = a[2].x * a[2].x + a[2].y * a[2].y +
       2 * (a[1].x * a[3].x + a[1].y * a[3].y);
-    c[5] = 2.0 * (a[2].x * a[3].x + a[2].y * a[3].y);
+    c[5] = 2.0f * (a[2].x * a[3].x + a[2].y * a[3].y);
     c[6] = a[3].x * a[3].x + a[3].y * a[3].y;
 
 
@@ -3181,7 +3392,6 @@ static BOOL _curvedLineIntersectsRect(const NSPoint *c, NSRect rect, CGFloat tol
         u = point.x - endPoint.x;
     } else {
         u = point.x - startPoint.x;
-        delta = endPoint.x - startPoint.x;
     }
     
     delta = fabs(startPoint.x - point.x) + fabs(endPoint.x - point.x);
@@ -3206,38 +3416,33 @@ static BOOL _curvedLineIntersectsRect(const NSPoint *c, NSRect rect, CGFloat tol
 
     // NOTE: Sadly, Newton's method becomes unstable as we approach the solution.  Also, the farther away from the curve, the wider the oscillation will be.
     // To get around this, we're keeping track of our best result, adding a few more iterations, and damping our approach.
-    
-	minDelta = 100000;
+    minDelta = 100000;
     bestU = u;
     
-    for( i = 0; i < 12; ++i )
-	{
+    for(i=0;i< 12;i++) {
         delta = (((((c[6] * u + c[5]) * u + c[4]) * u + c[3]) * u + c[2]) * u + c[1]) * u + c[0];
-        
-		if (delta < minDelta)
-		{
+        if (delta < minDelta) {
             minDelta = delta;
-            *position = u;
+            bestU = u;
         }
 
-        if (i==11 && minDelta <= tolerance)
-		{
+        if (i==11 && minDelta <= tolerance) {
+            *position = (float)bestU;
             return YES;
-        }
-		else
-		{
-            double slope = ((((( 6 * c[6] * u + 5 * c[5]) * u + 4 * c[4]) * u + 3 * c[3]) * u + 2 * c[2]) * u + c[1]);
-            double deltaU = delta/slope;
+        } else {
+            double  slope = ((((( 6 * c[6] * u + 5 * c[5]) * u + 4 * c[4]) * u + 3 * c[3]) * u + 2 * c[2]) * u + c[1]);
+            double  deltaU = delta/slope;
 
             if ((u==0 && delta > 0) || (u==1 && delta < 0)) {
+                *position = (float)bestU;
                 return minDelta <= tolerance;
             }
-            u -= 0.75 * deltaU; // Used to be just deltaU, but we're damping it a bit
+            u -= 0.75f * deltaU; // Used to be just deltaU, but we're damping it a bit
             if (u<0.0) {
-                u = 0.0;
+                u = 0.0f;
             }
             if (u>1.0) {
-                u = 1.0;
+                u = 1.0f;
             }
         }
     }
@@ -3245,10 +3450,10 @@ static BOOL _curvedLineIntersectsRect(const NSPoint *c, NSRect rect, CGFloat tol
     return NO;
 }
 
-- (BOOL)_straightLineIntersection:(CGFloat *)length time:(CGFloat *)tim segment:(NSPoint *)s line:(const NSPoint *)l {
+- (BOOL)_straightLineIntersection:(CGFloat *)length time:(CGFloat *)time segment:(NSPoint *)s line:(const NSPoint *)l {
     // PENDING: should optimize this for the most common cases (s[1] == 0);
-    CGFloat u;
-    CGFloat t;
+    double u;
+    double t;
     
     if (ABS(s[1].x) < 0.001) {
         if (ABS(s[1].y) < 0.001) {
@@ -3281,8 +3486,8 @@ static BOOL _curvedLineIntersectsRect(const NSPoint *c, NSRect rect, CGFloat tol
         return NO;
     }
     
-    *length = u;
-    *tim = t;
+    *length = (CGFloat)u;
+    *time = (CGFloat)t;
     return YES;
 }
 
@@ -3329,100 +3534,19 @@ static BOOL _curvedLineIntersectsRect(const NSPoint *c, NSRect rect, CGFloat tol
     return NO;
 }
 
-- (NSInteger)_segmentHitByPoint:(NSPoint)point position:(CGFloat *)position padding:(CGFloat)padding
+- (NSPoint)_endPointForSegment:(NSInteger)i;
 {
-    NSInteger count = [self elementCount];
-    NSInteger i;
     NSPoint points[3];
-    NSPoint startPoint;
-    NSPoint currentPoint;
-    NSInteger element;
-    BOOL needANewStartPoint;
-
-    if (count == 0)
-        return 0;
-
-    element = [self elementAtIndex:0 associatedPoints:points];
-    if (element != NSMoveToBezierPathElement) {
-        return 0;  // must start with a moveTo
-    }
-
-    startPoint = currentPoint = points[0];
-    needANewStartPoint = NO;
-    
-    for( i = 1; i < count; ++i )
-	{
-        element = [self elementAtIndex:i associatedPoints:points];
-		/*
-        if (NSEqualPoints(points[0], point)) {
-            if (i==0) {
-                i = 1;
-            }
-            return i;
-        }
-		*/
-        switch(element)
-		{
-            case NSMoveToBezierPathElement:
-                currentPoint = points[0];
-                if (needANewStartPoint) {
-                    startPoint = currentPoint;
-                    needANewStartPoint = NO;
-                }
-                break;
-            case NSClosePathBezierPathElement:
-                if ([self _straightLineHit:currentPoint :startPoint :point :position padding:padding]){
-                    return i;
-                }
-                currentPoint = startPoint;
-                needANewStartPoint = YES;
-                break;
-            case NSLineToBezierPathElement:
-                if ([self _straightLineHit:currentPoint :points[0] :point :position padding:padding]){
-                    return i;
-                }
-                currentPoint = points[0];
-                break;
-            case NSCurveToBezierPathElement:
-			{
-				// GPC: reject point if not in segment bounds - without this a bug in the _curvedLineHit method will prevent
-				// proper calculation of the position.
-				
-				NSRect cbr = _boundsOfCurveSegment(currentPoint, points[2], points[0], points[1]);
-				
-				if( NSPointInRect( point, NSInsetRect( cbr, -1, -1 )))
-				{
-					if ([self _curvedLineHit:point startPoint:currentPoint endPoint:points[2] controlPoint1:points[0] controlPoint2:points[1] position:position padding:padding])
-					{
-					   //NSLog(@"curve segemnt hit: %d, position: %f", i, *position );
-						 return i;
-					}
-				}
-                currentPoint = points[2];
-			}
-			break;
-				
-			default:
-				break;
-        }
-    }
-    return 0;
-}
-
-- (NSPoint)_endPointForSegment:(NSInteger)i {
-    NSPoint points[3];
-    NSInteger element = [self elementAtIndex:i associatedPoints:points];
+    NSBezierPathElement element = [self elementAtIndex:i associatedPoints:points];
     switch(element) {
         case NSCurveToBezierPathElement:
             return points[2];
         case NSClosePathBezierPathElement:
-            element = [self elementAtIndex:0 associatedPoints:points];
+            /* element = */ [self elementAtIndex:0 associatedPoints:points];
+            /* FALL THROUGH */
         case NSMoveToBezierPathElement:
         case NSLineToBezierPathElement:
             return points[0];
-			
-		default:
-			break;
     }
     return NSZeroPoint;
 }
@@ -3445,3 +3569,8 @@ void OACGAddRoundedRect(CGContextRef context, NSRect rect, CGFloat minyLeft, CGF
     CGContextClosePath(context);
 }
 
+@implementation OABezierPathIntersection
+@synthesize left = _left;
+@synthesize right = _right;
+@synthesize location = _location;
+@end

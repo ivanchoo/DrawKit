@@ -439,8 +439,8 @@ NSString* kDKDrawingToolUserDefaultsKey = @"DK_DrawingTool_Defaults";
 {
     NSAssert(str != nil, @"attempt to set keyboard equivalent to nil string - string can be empty but not nil");
 
-    [str retain];
-    [mKeyboardEquivalent release];
+    
+    
     mKeyboardEquivalent = str;
 
     mKeyboardModifiers = flags;

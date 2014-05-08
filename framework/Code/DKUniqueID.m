@@ -17,7 +17,7 @@
     CFStringRef str = CFUUIDCreateString(kCFAllocatorDefault, uuid);
     CFRelease(uuid);
 
-    return [(NSString*)str autorelease];
+    return (__bridge NSString*)str;
 }
 
 @end

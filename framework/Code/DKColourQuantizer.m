@@ -79,7 +79,6 @@ static inline void indexToRGB_332(NSUInteger i, NSUInteger rgb[3])
         m_cTable = [[NSMutableArray alloc] init];
 
         if (m_cTable == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -177,12 +176,6 @@ static inline void indexToRGB_332(NSUInteger i, NSUInteger rgb[3])
 
 #pragma mark -
 #pragma mark As an NSObject
-- (void)dealloc
-{
-    [m_cTable release];
-
-    [super dealloc];
-}
 
 @end
 
@@ -457,7 +450,6 @@ static NSUInteger mask[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
         [self deleteTree:&m_pTree];
     }
 
-    [super dealloc];
 }
 
 @end

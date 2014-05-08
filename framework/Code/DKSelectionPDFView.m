@@ -10,6 +10,7 @@
 #import "DKDrawing.h"
 #import "DKObjectDrawingLayer.h"
 #import "DKShapeGroup.h"
+#import "DKViewController.h"
 
 @implementation DKSelectionPDFView
 

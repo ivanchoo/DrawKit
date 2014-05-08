@@ -185,6 +185,9 @@ it will get initialized to 0.0 and NOTHING WILL BE DRAWN.
  */
 - (CGFloat)maximumScale;
 
+// jmj
+- (void)changeAttributes:(id)sender;
+
 @end
 
 #define kDKZoomingRetriggerPeriod 0.5

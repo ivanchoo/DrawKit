@@ -445,18 +445,13 @@ NSString* kDKDrawingScrollwheelSensePrefsKey = @"kDKDrawingcrollwheelSense"; // 
         mMinScale = 0.025;
         mMaxScale = 250.0;
 
-        mRT = [[DKRetriggerableTimer retriggerableTimerWithPeriod:kDKZoomingRetriggerPeriod
+        mRT = [DKRetriggerableTimer retriggerableTimerWithPeriod:kDKZoomingRetriggerPeriod
                                                            target:self
-                                                         selector:@selector(stopScaleChange)] retain];
+                                                         selector:@selector(stopScaleChange)];
     }
     return self;
 }
 
-- (void)dealloc
-{
-    [mRT release];
-    [super dealloc];
-}
 
 #pragma mark -
 #pragma mark As part of NSMenuValidation protocol

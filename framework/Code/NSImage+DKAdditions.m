@@ -61,7 +61,7 @@
 
     NSImage* image = [[NSImage alloc] initWithSize:size];
     [image addRepresentation:bm];
-    [bm release];
+    
 
     NSGraphicsContext* tempContext = [NSGraphicsContext graphicsContextWithBitmapImageRep:bm];
     [NSGraphicsContext saveGraphicsState];
@@ -85,7 +85,7 @@
 
     [image setCacheMode:NSImageCacheNever];
 
-    return [image autorelease];
+    return image;
 }
 
 @end

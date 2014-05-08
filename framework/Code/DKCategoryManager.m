@@ -51,7 +51,7 @@ static id sDearchivingHelper = nil;
  */
 + (DKCategoryManager*)categoryManager
 {
-    return [[[DKCategoryManager alloc] init] autorelease];
+    return [[DKCategoryManager alloc] init];
 }
 
 /** @brief Returns a new category manager object based on an existing dictionary
@@ -62,7 +62,7 @@ static id sDearchivingHelper = nil;
  */
 + (DKCategoryManager*)categoryManagerWithDictionary:(NSDictionary*)dict
 {
-    return [[[DKCategoryManager alloc] initWithDictionary:dict] autorelease];
+    return [[DKCategoryManager alloc] initWithDictionary:dict];
 }
 
 /** @brief Return the default categories defined for this class
@@ -96,8 +96,8 @@ static id sDearchivingHelper = nil;
 
 + (void)setDearchivingHelper:(id)helper
 {
-    [helper retain];
-    [sDearchivingHelper release];
+    
+    
     sDearchivingHelper = helper;
 }
 
@@ -127,7 +127,7 @@ static id sDearchivingHelper = nil;
     id obj = [unarch decodeObjectForKey:@"root"];
 
     [unarch finishDecoding];
-    [unarch autorelease];
+    
 
     NSAssert(obj != nil, @"Expected valid obj");
 
@@ -395,7 +395,7 @@ static id sDearchivingHelper = nil;
             [keys addObject:key];
     }
 
-    return [keys autorelease];
+    return keys;
 }
 
 /** @brief Return a copy of the master dictionary
@@ -403,7 +403,7 @@ static id sDearchivingHelper = nil;
  */
 - (NSDictionary*)dictionary
 {
-    return [[m_masterList copy] autorelease];
+    return [m_masterList copy];
 }
 
 /** @brief Smartly merges objects into the category manager
@@ -527,7 +527,7 @@ static id sDearchivingHelper = nil;
  */
 - (NSArray*)objectsInCategory:(NSString*)catName
 {
-    NSMutableArray* keys = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray* keys = [[NSMutableArray alloc] init];
     NSEnumerator* iter = [[self allKeysInCategory:catName] objectEnumerator];
     NSString* s;
 
@@ -548,7 +548,7 @@ static id sDearchivingHelper = nil;
  */
 - (NSArray*)objectsInCategories:(NSArray*)catNames
 {
-    NSMutableArray* keys = [[[NSMutableArray alloc] init] autorelease];
+    NSMutableArray* keys = [[NSMutableArray alloc] init];
     NSEnumerator* iter = [[self allKeysInCategories:catNames] objectEnumerator];
     NSString* s;
 
@@ -607,7 +607,7 @@ static id sDearchivingHelper = nil;
             [temp addUniqueObjectsFromArray:keys];
         }
 
-        return [temp autorelease];
+        return temp;
     }
 }
 
@@ -723,7 +723,7 @@ static id sDearchivingHelper = nil;
                                                           userInfo:info];
         [m_categories setObject:cat
                          forKey:catName];
-        [cat release];
+        
 
         // inform any menus of the new category
 
@@ -788,12 +788,12 @@ static id sDearchivingHelper = nil;
     NSMutableArray* gs = [m_categories objectForKey:catName];
 
     if (gs) {
-        [gs retain];
+        
         [m_categories removeObjectForKey:catName];
 
         [m_categories setObject:gs
                          forKey:newname];
-        [gs release];
+        
 
         // update menu item title:
 
@@ -983,13 +983,13 @@ static id sDearchivingHelper = nil;
 
     // retain the object while we move it around:
 
-    id object = [[self objectForKey:key] retain];
+    id object = [self objectForKey:key];
     [self removeObjectForKey:key];
     [self addObject:object
                   forKey:newKey
             toCategories:cats
         createCategories:NO];
-    [object release];
+    
 }
 
 #pragma mark -
@@ -1044,7 +1044,7 @@ static id sDearchivingHelper = nil;
     if (sortIt)
         [catList sortUsingSelector:@selector(caseInsensitiveCompare:)];
 
-    return [catList autorelease];
+    return catList;
 }
 
 /** @brief Get a list of reserved categories - those that should not be deleted or renamed
@@ -1232,7 +1232,7 @@ static id sDearchivingHelper = nil;
     [arch encodeObject:self
                 forKey:@"root"];
     [arch finishEncoding];
-    [arch release];
+    
 
     return d;
 }
@@ -1269,7 +1269,7 @@ static id sDearchivingHelper = nil;
 
         // TODO: deal with menus
 
-        [newCM release];
+        
         [self setRecentlyAddedListEnabled:YES];
 
         return YES;
@@ -1296,7 +1296,7 @@ static id sDearchivingHelper = nil;
 
     if (newCM) {
         [self copyItemsFromCategoryManager:newCM];
-        [newCM release];
+        
 
         return YES;
     }
@@ -1429,7 +1429,7 @@ static id sDearchivingHelper = nil;
                                                                   options:options];
 
     [mMenusList addObject:menuInfo];
-    [menuInfo autorelease];
+    
 
     return [menuInfo menu];
 }
@@ -1468,7 +1468,7 @@ static id sDearchivingHelper = nil;
                                                                                              options:options];
 
     [mMenusList addObject:menuInfo];
-    [menuInfo release];
+    
 
     return [menuInfo menu];
 }
@@ -1490,16 +1490,6 @@ static id sDearchivingHelper = nil;
 
 #pragma mark -
 #pragma mark As an NSObject
-- (void)dealloc
-{
-    [m_recentlyUsed release];
-    [m_recentlyAdded release];
-    [m_categories release];
-    [m_masterList release];
-    [mMenusList release];
-
-    [super dealloc];
-}
 
 - (id)init
 {
@@ -1518,7 +1508,6 @@ static id sDearchivingHelper = nil;
             || m_categories == nil
             || m_recentlyAdded == nil
             || m_recentlyUsed == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -1551,10 +1540,10 @@ static id sDearchivingHelper = nil;
 
 - (id)initWithCoder:(NSCoder*)coder
 {
-    m_masterList = [[coder decodeObjectForKey:@"master"] retain];
-    m_categories = [[coder decodeObjectForKey:@"categories"] retain];
-    m_recentlyAdded = [[coder decodeObjectForKey:@"recent_add"] retain];
-    m_recentlyUsed = [[coder decodeObjectForKey:@"recent_use"] retain];
+    m_masterList = [coder decodeObjectForKey:@"master"];
+    m_categories = [coder decodeObjectForKey:@"categories"];
+    m_recentlyAdded = [coder decodeObjectForKey:@"recent_add"];
+    m_recentlyUsed = [coder decodeObjectForKey:@"recent_use"];
 
     m_maxRecentlyAddedItems = [coder decodeIntegerForKey:@"maxadd"];
     m_maxRecentlyUsedItems = [coder decodeIntegerForKey:@"maxuse"];
@@ -1566,7 +1555,6 @@ static id sDearchivingHelper = nil;
         || m_categories == nil
         || m_recentlyAdded == nil
         || m_recentlyUsed == nil) {
-        [self autorelease];
         self = nil;
     }
 
@@ -1588,7 +1576,7 @@ static id sDearchivingHelper = nil;
 
     NSDictionary* cats = [m_categories deepCopy];
     [copy->m_categories setDictionary:cats];
-    [cats release];
+    
 
     return copy;
 }
@@ -1716,7 +1704,7 @@ static id sDearchivingHelper = nil;
 
         [mTheMenu insertItem:newItem
                      atIndex:indx];
-        [newItem release];
+        
     }
 }
 
@@ -1738,7 +1726,7 @@ static id sDearchivingHelper = nil;
     NSMenuItem* item = [mTheMenu itemWithTitle:[oldCategory capitalizedString]];
 
     if (item != nil) {
-        [item retain];
+        
         [mTheMenu removeItem:item];
         [item setTitle:[newName capitalizedString]];
 
@@ -1767,7 +1755,7 @@ static id sDearchivingHelper = nil;
 
         [mTheMenu insertItem:item
                      atIndex:indx];
-        [item release];
+        
     }
 }
 
@@ -1842,7 +1830,7 @@ static id sDearchivingHelper = nil;
 
                     [subMenu insertItem:childItem
                                 atIndex:insertIndex];
-                    [childItem release];
+                    
                 }
             }
         }
@@ -1900,7 +1888,7 @@ static id sDearchivingHelper = nil;
                 }
             }
 
-            [items release];
+            
 
             // add a new item for the newly added key if it's unknown in the menu
 
@@ -1928,7 +1916,7 @@ static id sDearchivingHelper = nil;
                     [childItem setTag:kDKCategoryManagerManagedMenuItemTag];
                     [raSub insertItem:childItem
                               atIndex:0];
-                    [childItem release];
+                    
                 }
             }
         }
@@ -1950,11 +1938,11 @@ static id sDearchivingHelper = nil;
         NSInteger indx = [recentItemsMenu indexOfItemWithRepresentedObject:repObject];
 
         if (indx != -1) {
-            NSMenuItem* item = [[recentItemsMenu itemAtIndex:indx] retain];
+            NSMenuItem* item = [recentItemsMenu itemAtIndex:indx];
             [recentItemsMenu removeItem:item];
             [recentItemsMenu insertItem:item
                                 atIndex:0];
-            [item release];
+            
         }
     }
 }
@@ -2063,7 +2051,7 @@ static id sDearchivingHelper = nil;
 
                 // keep track of the title so that if it changes we can resort the menu
 
-                NSString* oldTitle = [[item title] retain];
+                NSString* oldTitle = [item title];
 
                 if (mCallbackTargetRef && [mCallbackTargetRef respondsToSelector:@selector(menuItem:
                                                                                      wasAddedForObject:
@@ -2081,19 +2069,19 @@ static id sDearchivingHelper = nil;
                     indx = [names indexOfObject:[item title]];
 
                     if (indx != NSNotFound) {
-                        [item retain];
+                        
                         [subMenu removeItem:item];
                         [subMenu insertItem:item
                                     atIndex:indx];
-                        [item release];
+                        
                     }
                 }
-                [oldTitle release];
+                
             }
         }
     }
 
-    [categories release];
+    
 }
 
 - (void)removeAll
@@ -2303,14 +2291,9 @@ static id sDearchivingHelper = nil;
         [childItem setTag:kDKCategoryManagerManagedMenuItemTag];
     }
 
-    return [theMenu autorelease];
+    return theMenu;
 }
 
-- (void)dealloc
-{
-    [mTheMenu release];
-    [super dealloc];
-}
 
 #pragma mark -
 
@@ -2333,7 +2316,7 @@ static id sDearchivingHelper = nil;
             [aMenu removeItem:item];
     }
 
-    [items release];
+    
 }
 
 @end

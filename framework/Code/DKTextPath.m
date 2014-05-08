@@ -41,13 +41,13 @@ static NSString* sDefault_string = @"Double-click to edit this text";
 
     [te setText:str];
 
-    return [te autorelease];
+    return te;
 }
 
 + (void)setDefaultTextString:(NSString*)str
 {
-    [str retain];
-    [sDefault_string release];
+    
+    
     sDefault_string = str;
 }
 
@@ -128,7 +128,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
         else
             [self setText:str];
 
-        [str release];
+        
     }
 }
 
@@ -232,7 +232,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
 
         [currentStyle setTextAttributes:ta];
 
-        return [currentStyle autorelease];
+        return currentStyle;
     }
 }
 
@@ -605,10 +605,10 @@ static NSString* sDefault_string = @"Double-click to edit this text";
         [layer addObject:so
                  atIndex:myIndex];
         [layer replaceSelectionWithObject:so];
-        [self retain];
+        
         [layer removeObject:self];
         [layer commitSelectionUndoWithActionName:NSLocalizedString(@"Convert To Shape", @"undo string for convert text to shape")];
-        [self release];
+        
     } else
         NSBeep();
 }
@@ -627,10 +627,10 @@ static NSString* sDefault_string = @"Double-click to edit this text";
         [layer addObject:so
                  atIndex:myIndex];
         [layer replaceSelectionWithObject:so];
-        [self retain];
+        
         [layer removeObject:self];
         [layer commitSelectionUndoWithActionName:NSLocalizedString(@"Convert To Shape Group", @"undo string for convert text to group")];
-        [self release];
+        
     } else
         NSBeep();
 }
@@ -657,10 +657,10 @@ static NSString* sDefault_string = @"Double-click to edit this text";
         [layer addObject:so
                  atIndex:myIndex];
         [layer replaceSelectionWithObject:so];
-        [self retain];
+        
         [layer removeObject:self];
         [layer commitSelectionUndoWithActionName:NSLocalizedString(@"Convert To Path", @"undo string for convert text to path")];
-        [self release];
+        
     } else
         NSBeep();
 }
@@ -727,7 +727,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     [adorn setLayoutMode:kDKTextLayoutAlongPath];
     [adorn setAlignment:NSJustifiedTextAlignment];
 
-    return [adorn autorelease];
+    return adorn;
 }
 
 - (void)setTextAdornment:(DKTextAdornment*)adornment
@@ -735,12 +735,12 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     if (adornment != mTextAdornment) {
         if (mTextAdornment) {
             [mTextAdornment tearDownKVOForObserver:self];
-            [mTextAdornment release];
+            
             mTextAdornment = nil;
         }
 
         if (adornment) {
-            mTextAdornment = [adornment retain];
+            mTextAdornment = adornment;
             // debug - test greeking
             //[mTextAdornment setGreeking:kDKGreekingByGlyphRectangle];
             [mTextAdornment setUpKVOForObserver:self];
@@ -772,7 +772,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
             [newAdHocStyle setName:[NSString stringWithFormat:@"%@*", newname]];
 
         [self setStyle:newAdHocStyle];
-        [newAdHocStyle release];
+        
     }
 }
 
@@ -840,7 +840,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
         else
             [[[self layer] selectionColour] set];
         [moreText fill];
-        [moreText release];
+        
     }
 
     [super drawSelectedState];
@@ -904,7 +904,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     [[theMenu addItemWithTitle:NSLocalizedString(@"Font", @"menu item for Font")
                         action:nil
                  keyEquivalent:@""] setSubmenu:fm];
-    [fm release];
+    
 
     [theMenu addItem:[NSMenuItem separatorItem]];
 
@@ -949,7 +949,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     [[theMenu addItemWithTitle:NSLocalizedString(@"Vertical Alignment", @"menu item for vertical alignment")
                         action:nil
                  keyEquivalent:@""] setSubmenu:vert];
-    [vert release];
+    
 #endif
 
     NSMenu* convert = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"Convert To", @"menu item for convert to submenu")];
@@ -965,7 +965,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
                        keyEquivalent:@""];
 
     [item setSubmenu:convert];
-    [convert release];
+    
     [item setTag:kDKConvertToSubmenuTag];
 
     [super populateContextualMenu:theMenu];
@@ -1039,7 +1039,6 @@ static NSString* sDefault_string = @"Double-click to edit this text";
 {
     [self endEditing];
     [self setTextAdornment:nil];
-    [super dealloc];
 }
 
 - (void)observeValueForKeyPath:(NSString*)keypath ofObject:(id)object change:(NSDictionary*)change context:(void*)context
@@ -1124,7 +1123,7 @@ static NSString* sDefault_string = @"Double-click to edit this text";
 
     DKTextAdornment* ta = [[self textAdornment] copyWithZone:zone];
     [copy setTextAdornment:ta];
-    [ta release];
+    
 
     return copy;
 }

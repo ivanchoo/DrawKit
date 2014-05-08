@@ -79,7 +79,7 @@
 {
     DKShapeGroup* group = [[DKShapeGroup alloc] initWithObjectsInArray:objects];
 
-    return [group autorelease];
+    return group;
 }
 
 /** @brief Filters array to remove objects whose class returns NO to isGroupable.
@@ -120,7 +120,6 @@
         [self setGroupObjects:objects];
 
         if (m_objects == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -193,8 +192,8 @@
                                           selector:@selector(setObjects:)
                                             object:m_objects];
 
-        [objects retain];
-        [m_objects release];
+        
+        
         m_objects = objects;
 
         [m_objects makeObjectsPerformSelector:@selector(groupWillAddObject:)
@@ -501,7 +500,7 @@
 
     [layer didUngroupObjects:m_objects];
 
-    [m_objects release];
+    
     m_objects = nil;
 }
 
@@ -590,7 +589,7 @@
         }
     }
 
-    return [unionOfAllStyles autorelease];
+    return unionOfAllStyles;
 }
 
 - (NSSet*)allRegisteredStyles
@@ -615,7 +614,7 @@
         }
     }
 
-    return [unionOfAllStyles autorelease];
+    return unionOfAllStyles;
 }
 
 - (void)replaceMatchingStylesFromSet:(NSSet*)aSet
@@ -853,8 +852,7 @@
     [self invalidateCache];
     [m_objects makeObjectsPerformSelector:@selector(setContainer:)
                                withObject:nil];
-    [m_objects release];
-    [super dealloc];
+    
 }
 
 #pragma mark -
@@ -929,7 +927,6 @@
         [self setObjects:[coder decodeObjectForKey:@"groupedobjects"]];
 
         if (m_objects == nil) {
-            [self autorelease];
             self = nil;
         }
     }
@@ -961,7 +958,7 @@
 
         [objectsCopy addObject:copyOfObj];
         [copyOfObj setContainer:copy];
-        [copyOfObj release];
+        
     }
 
     copy->m_objects = objectsCopy;

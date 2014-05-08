@@ -71,7 +71,7 @@
     //	float	 br = 10.0;
     id val;
 
-    NSShadow* obj = [[[NSShadow alloc] init] autorelease];
+    NSShadow* obj = [[NSShadow alloc] init];
 
     if ([expr argCount] == 1) {
         // use default values

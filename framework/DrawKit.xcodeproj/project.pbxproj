@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
+		962EE42D191AB07700D55328 /* OFGeometry.h in Headers */ = {isa = PBXBuildFile; fileRef = 962EE42B191AB07700D55328 /* OFGeometry.h */; };
+		962EE42E191AB07700D55328 /* OFGeometry.m in Sources */ = {isa = PBXBuildFile; fileRef = 962EE42C191AB07700D55328 /* OFGeometry.m */; };
 		96F5165D0B89DBBE0047BA96 /* DKDrawing.h in Headers */ = {isa = PBXBuildFile; fileRef = 96F515FA0B89DBBC0047BA96 /* DKDrawing.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		96F5165E0B89DBBE0047BA96 /* DKDrawing.m in Sources */ = {isa = PBXBuildFile; fileRef = 96F515FB0B89DBBC0047BA96 /* DKDrawing.m */; };
 		96F5165F0B89DBBE0047BA96 /* DKDrawingInfoLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 96F515FE0B89DBBC0047BA96 /* DKDrawingInfoLayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -268,8 +270,6 @@
 		BFD211AD0E2C28C80081C007 /* NSBezierPath-OAExtensions.m in Sources */ = {isa = PBXBuildFile; fileRef = BFD211AA0E2C28C80081C007 /* NSBezierPath-OAExtensions.m */; };
 		BFD211AE0E2C28C80081C007 /* NSBezierPath-OAExtensions.h in Headers */ = {isa = PBXBuildFile; fileRef = BFD211AB0E2C28C80081C007 /* NSBezierPath-OAExtensions.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BFD211AF0E2C28C80081C007 /* NSBezierPath-OAInternal.h in Headers */ = {isa = PBXBuildFile; fileRef = BFD211AC0E2C28C80081C007 /* NSBezierPath-OAInternal.h */; };
-		BFD211C90E2C2CBD0081C007 /* NSBezierPath+Combinatorial.m in Sources */ = {isa = PBXBuildFile; fileRef = BFD211C70E2C2CBD0081C007 /* NSBezierPath+Combinatorial.m */; };
-		BFD211CA0E2C2CBD0081C007 /* NSBezierPath+Combinatorial.h in Headers */ = {isa = PBXBuildFile; fileRef = BFD211C80E2C2CBD0081C007 /* NSBezierPath+Combinatorial.h */; };
 		BFD2349D0DA24D6500FB629C /* DKViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = BFD2349B0DA24D6500FB629C /* DKViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		BFD2349E0DA24D6500FB629C /* DKViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = BFD2349C0DA24D6500FB629C /* DKViewController.m */; };
 		BFD2365B0DA31AC300FB629C /* DKDrawing+Paper.h in Headers */ = {isa = PBXBuildFile; fileRef = BFD236590DA31AC300FB629C /* DKDrawing+Paper.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -322,6 +322,8 @@
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		32DBCF5E0370ADEE00C91783 /* DKDrawKit_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DKDrawKit_Prefix.pch; path = Code/DKDrawKit_Prefix.pch; sourceTree = "<group>"; };
 		8DC2EF5A0486A6940098B216 /* DrawKitInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = DrawKitInfo.plist; sourceTree = "<group>"; };
+		962EE42B191AB07700D55328 /* OFGeometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OFGeometry.h; path = Code/OFGeometry.h; sourceTree = "<group>"; };
+		962EE42C191AB07700D55328 /* OFGeometry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OFGeometry.m; path = Code/OFGeometry.m; sourceTree = "<group>"; };
 		9660E6100BEF442B00B6A38C /* DKDrawKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = DKDrawKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		96F515FA0B89DBBC0047BA96 /* DKDrawing.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DKDrawing.h; path = Code/DKDrawing.h; sourceTree = "<group>"; };
 		96F515FB0B89DBBC0047BA96 /* DKDrawing.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = DKDrawing.m; path = Code/DKDrawing.m; sourceTree = "<group>"; };
@@ -568,8 +570,6 @@
 		BFD211AA0E2C28C80081C007 /* NSBezierPath-OAExtensions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSBezierPath-OAExtensions.m"; path = "Code/Omni/NSBezierPath-OAExtensions.m"; sourceTree = "<group>"; };
 		BFD211AB0E2C28C80081C007 /* NSBezierPath-OAExtensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSBezierPath-OAExtensions.h"; path = "Code/Omni/NSBezierPath-OAExtensions.h"; sourceTree = "<group>"; };
 		BFD211AC0E2C28C80081C007 /* NSBezierPath-OAInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSBezierPath-OAInternal.h"; path = "Code/Omni/NSBezierPath-OAInternal.h"; sourceTree = "<group>"; };
-		BFD211C70E2C2CBD0081C007 /* NSBezierPath+Combinatorial.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSBezierPath+Combinatorial.m"; path = "Code/NSBezierPath+Combinatorial.m"; sourceTree = "<group>"; };
-		BFD211C80E2C2CBD0081C007 /* NSBezierPath+Combinatorial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSBezierPath+Combinatorial.h"; path = "Code/NSBezierPath+Combinatorial.h"; sourceTree = "<group>"; };
 		BFD2349B0DA24D6500FB629C /* DKViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DKViewController.h; path = Code/DKViewController.h; sourceTree = "<group>"; };
 		BFD2349C0DA24D6500FB629C /* DKViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = DKViewController.m; path = Code/DKViewController.m; sourceTree = "<group>"; };
 		BFD236590DA31AC300FB629C /* DKDrawing+Paper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "DKDrawing+Paper.h"; path = "Code/DKDrawing+Paper.h"; sourceTree = "<group>"; };
@@ -695,6 +695,8 @@
 		08FB77AEFE84172EC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				962EE42B191AB07700D55328 /* OFGeometry.h */,
+				962EE42C191AB07700D55328 /* OFGeometry.m */,
 				96F515F80B89DBBC0047BA96 /* DrawKit */,
 				96F515DD0B89DB550047BA96 /* UI Support */,
 			);
@@ -1206,8 +1208,6 @@
 				BFD211AC0E2C28C80081C007 /* NSBezierPath-OAInternal.h */,
 				BFD211AB0E2C28C80081C007 /* NSBezierPath-OAExtensions.h */,
 				BFD211AA0E2C28C80081C007 /* NSBezierPath-OAExtensions.m */,
-				BFD211C80E2C2CBD0081C007 /* NSBezierPath+Combinatorial.h */,
-				BFD211C70E2C2CBD0081C007 /* NSBezierPath+Combinatorial.m */,
 				96F516460B89DBBD0047BA96 /* NSBezierPath+Editing.h */,
 				96F516470B89DBBD0047BA96 /* NSBezierPath+Editing.m */,
 				96F516480B89DBBD0047BA96 /* NSBezierPath+Geometry.h */,
@@ -1314,6 +1314,7 @@
 				96F516A20B89DBBE0047BA96 /* NSBezierPath+Geometry.h in Headers */,
 				96F516A40B89DBBE0047BA96 /* NSBezierPath+GPC.h in Headers */,
 				96F516A60B89DBBE0047BA96 /* DKDistortionTransform.h in Headers */,
+				962EE42D191AB07700D55328 /* OFGeometry.h in Headers */,
 				96F516A80B89DBBE0047BA96 /* NSDictionary+DeepCopy.h in Headers */,
 				96F516AA0B89DBBE0047BA96 /* DKDrawingView.h in Headers */,
 				96F516AD0B89DBBE0047BA96 /* GCZoomView.h in Headers */,
@@ -1401,7 +1402,6 @@
 				BF2865CA0E264DCF001CD43F /* DKDrawing+Export.h in Headers */,
 				BFD211AE0E2C28C80081C007 /* NSBezierPath-OAExtensions.h in Headers */,
 				BFD211AF0E2C28C80081C007 /* NSBezierPath-OAInternal.h in Headers */,
-				BFD211CA0E2C2CBD0081C007 /* NSBezierPath+Combinatorial.h in Headers */,
 				BF8C006D0E400B27004206C9 /* DKRouteFinder.h in Headers */,
 				BFE7A2020E52FD9800626425 /* NSString+DKAdditions.h in Headers */,
 				BF618B880EDBCFEC005FAC2E /* DKTextPath.h in Headers */,
@@ -1574,6 +1574,7 @@
 				96F5168A0B89DBBE0047BA96 /* DKHatching.m in Sources */,
 				96F5168C0B89DBBE0047BA96 /* DKStroke.m in Sources */,
 				96F5168E0B89DBBE0047BA96 /* DKFill.m in Sources */,
+				962EE42E191AB07700D55328 /* OFGeometry.m in Sources */,
 				96F516900B89DBBE0047BA96 /* DKStyle.m in Sources */,
 				96F516920B89DBBE0047BA96 /* DKStyle+Text.m in Sources */,
 				96F516940B89DBBE0047BA96 /* DKRasterizer.m in Sources */,
@@ -1658,7 +1659,6 @@
 				BF28629A0E2315FD001CD43F /* DKStyle+SimpleAccess.m in Sources */,
 				BF2865CB0E264DCF001CD43F /* DKDrawing+Export.m in Sources */,
 				BFD211AD0E2C28C80081C007 /* NSBezierPath-OAExtensions.m in Sources */,
-				BFD211C90E2C2CBD0081C007 /* NSBezierPath+Combinatorial.m in Sources */,
 				BF8C006E0E400B27004206C9 /* DKRouteFinder.m in Sources */,
 				BFE7A2010E52FD9800626425 /* NSString+DKAdditions.m in Sources */,
 				BF618B890EDBCFEC005FAC2E /* DKTextPath.m in Sources */,
@@ -1725,6 +1725,7 @@
 		1DEB91AE08733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
@@ -1753,6 +1754,7 @@
 		1DEB91AF08733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;

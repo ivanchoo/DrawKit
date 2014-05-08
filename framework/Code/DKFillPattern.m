@@ -23,12 +23,12 @@
     // return the default pattern , which is based on some image - unlikely to be really useful so might be
     // better to do something else here???
 
-    return [[[self alloc] initWithImage:[NSImage imageNamed:@"Rect"]] autorelease];
+    return [[self alloc] initWithImage:[NSImage imageNamed:@"Rect"]];
 }
 
 + (DKFillPattern*)fillPatternWithImage:(NSImage*)image
 {
-    return [[[self alloc] initWithImage:image] autorelease];
+    return [[self alloc] initWithImage:image];
 }
 
 #pragma mark -
@@ -127,12 +127,7 @@
     motifBounds.size.width = mb.width * [self scale];
     motifBounds.size.height = mb.height * [self scale];
 
-    NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-    // set up a transform that will transform each motif point to allow for the object's
-    // origin and angle, so the pattern can be rotated as a pattern rather than as individual images
-
-    NSAffineTransform* tfm = RotationTransform(angle, cp);
+    @autoreleasepool { NSAffineTransform* tfm = RotationTransform(angle, cp);
     NSPoint wobblePoint = NSZeroPoint;
     CGFloat tempAngle = mangle;
 
@@ -210,9 +205,7 @@
                                slope:tempAngle
                             userInfo:NULL];
         }
-    }
-
-    [pool drain];
+    } }
 }
 
 #pragma mark -
@@ -377,11 +370,6 @@
     return self;
 }
 
-- (void)dealloc
-{
-    [mMotifAngleRandCache release];
-    [super dealloc];
-}
 
 #pragma mark -
 #pragma mark As part of DKRasterizerProtocol
