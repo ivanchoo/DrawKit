@@ -306,7 +306,7 @@ static NSComparisonResult zComparisonFunc(id<DKStorableObject> a, id<DKStorableO
 
 static void renumberFunc(const void* value, void* context)
 {
-    id<DKStorableObject> obj = (id<DKStorableObject>)value;
+    id<DKStorableObject> obj = (__bridge id<DKStorableObject>)value;
     [obj setIndex:*(NSUInteger*)context];
     (*(NSUInteger*)context)++;
 }
@@ -314,7 +314,7 @@ static void renumberFunc(const void* value, void* context)
 static void unmarkFunc(const void* value, void* context)
 {
 #pragma unused(context)
-    [(id<DKStorableObject>)value setMarked:NO];
+    [(__bridge id<DKStorableObject>)value setMarked:NO];
 }
 
 - (void)renumberObjectsFromIndex:(NSUInteger)indx
@@ -424,11 +424,6 @@ static void unmarkFunc(const void* value, void* context)
     return self;
 }
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 - (id)initWithCoder:(NSCoder*)coder
 {
@@ -437,7 +432,7 @@ static void unmarkFunc(const void* value, void* context)
     mTreeDepth = [coder decodeIntegerForKey:@"DKBSPDirectStorage_treeDepth"];
     [self setCanvasSize:[coder decodeSizeForKey:@"DKBSPDirectStorage_canvasSize"]];
     mAutoRebuild = YES;
-    [super initWithCoder:coder];
+    if (!(self = [super initWithCoder:coder])) return nil;
 
     return self;
 }
@@ -593,10 +588,10 @@ static void unmarkFunc(const void* value, void* context)
 
 static void addValueToFoundObjects(const void* value, void* context)
 {
-    id<DKStorableObject> obj = (id<DKStorableObject>)value;
+    id<DKStorableObject> obj = (__bridge id<DKStorableObject>)value;
 
     if (![obj isMarked] && [obj visible]) {
-        DKBSPDirectTree* tree = (DKBSPDirectTree*)context;
+        DKBSPDirectTree* tree = (__bridge DKBSPDirectTree*)context;
         NSView* view = tree->mViewRef;
 
         // double-check that the view really needs to draw this
@@ -623,7 +618,7 @@ static void addValueToFoundObjects(const void* value, void* context)
 
     case kDKOperationAccumulate: {
 #if USE_CF_APPLIER
-        CFArrayApplyFunction((CFArrayRef)leaf, CFRangeMake(0, [leaf count]), addValueToFoundObjects, self);
+        CFArrayApplyFunction((CFArrayRef)leaf, CFRangeMake(0, [leaf count]), addValueToFoundObjects, (__bridge void *)(self));
 #else
         NSEnumerator* iter = [leaf objectEnumerator];
         id<DKStorableObject> anObject;
@@ -661,11 +656,6 @@ static void addValueToFoundObjects(const void* value, void* context)
 #pragma mark -
 #pragma mark - as a NSObject
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 - (NSString*)description
 {

@@ -1032,7 +1032,6 @@ NSString* kDKLayerGroupDidReorderLayers = @"kDKLayerGroupDidReorderLayers";
     [m_layers makeObjectsPerformSelector:@selector(setLayerGroup:)
                               withObject:nil];
     
-    [super dealloc];
 }
 
 - (id)init

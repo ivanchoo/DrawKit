@@ -1399,9 +1399,7 @@ static BOOL sSubstitute = NO;
         return;
 
     if ([self enabled]) {
-        NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-        if (![[self class] shouldAntialias] && [NSGraphicsContext currentContextDrawingToScreen]) {
+        @autoreleasepool { if (![[self class] shouldAntialias] && [NSGraphicsContext currentContextDrawingToScreen]) {
             [[NSGraphicsContext currentContext] setShouldAntialias:NO];
             [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationNone];
         }
@@ -1421,9 +1419,7 @@ static BOOL sSubstitute = NO;
 
             NSLog(@"An exception occurred while rendering the style - PLEASE FIX - %@. Exception = %@", self, exception);
         }
-        m_renderClientRef = nil;
-
-        [pool drain];
+        m_renderClientRef = nil; }
     }
 }
 
@@ -1497,7 +1493,6 @@ static BOOL sSubstitute = NO;
     
     
 
-    [super dealloc];
 }
 
 - (id)init

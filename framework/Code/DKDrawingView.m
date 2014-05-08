@@ -14,6 +14,7 @@
 #import "LogEvent.h"
 #import "NSBezierPath+Shapes.h"
 #import "NSColor+DKAdditions.h"
+#import "GCZoomView.h"
 #include <tgmath.h>
 
 #pragma mark Constants (Non-localized)
@@ -1295,10 +1296,6 @@ static Class s_textEditorClass = Nil;
     // if the view automatically created its own "back-end", release all of that now - the drawing owns the controllers so
     // they are also disposed of.
 
-    if (m_didCreateDrawing && mAutoDrawing != nil)
-        
-
-    [super dealloc];
 }
 
 /** @brief Forward an invocation to the active layer if it implements it

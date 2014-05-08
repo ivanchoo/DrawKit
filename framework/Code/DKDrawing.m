@@ -2059,7 +2059,6 @@ static id sDearchivingHelper = nil;
     
     
 
-    [super dealloc];
 }
 
 - (id)init

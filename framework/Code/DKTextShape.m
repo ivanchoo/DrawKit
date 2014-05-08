@@ -1492,7 +1492,6 @@ static NSString* sDefault_string = @"Double-click to edit this text";
     
 #endif
     [self setTextAdornment:nil];
-    [super dealloc];
 }
 
 - (id)init

@@ -1064,7 +1064,6 @@ static NSColor* sMajorColour = nil;
     
     
 
-    [super dealloc];
 }
 
 - (id)init

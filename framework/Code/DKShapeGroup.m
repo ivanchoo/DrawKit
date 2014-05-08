@@ -853,7 +853,6 @@
     [m_objects makeObjectsPerformSelector:@selector(setContainer:)
                                withObject:nil];
     
-    [super dealloc];
 }
 
 #pragma mark -

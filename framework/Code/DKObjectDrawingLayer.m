@@ -2236,18 +2236,18 @@ enum {
 static void drawFunction1(const void* value, void* context)
 {
 #pragma unused(context)
-    [(DKDrawableObject*)value drawContentWithSelectedState:NO];
+    [(__bridge DKDrawableObject*)value drawContentWithSelectedState:NO];
 }
 
 static void drawFunction2(const void* value, void* context)
 {
-    if ([(DKObjectDrawingLayer*)context isSelectedObject:(DKDrawableObject*)value])
-        [(DKDrawableObject*)value drawSelectedState];
+    if ([(__bridge DKObjectDrawingLayer*)context isSelectedObject:(__bridge DKDrawableObject*)value])
+        [(__bridge DKDrawableObject*)value drawSelectedState];
 }
 
 static void drawFunction3(const void* value, void* context)
 {
-    [(DKDrawableObject*)value drawContentWithSelectedState:[(DKObjectDrawingLayer*)context isSelectedObject:(DKDrawableObject*)value]];
+    [(__bridge DKDrawableObject*)value drawContentWithSelectedState:[(__bridge DKObjectDrawingLayer*)context isSelectedObject:(__bridge DKDrawableObject*)value]];
 }
 
 /** @brief Draws the layer and its contents on demand
@@ -2263,8 +2263,7 @@ static void drawFunction3(const void* value, void* context)
         // anything to draw?
 
         if ([self countOfObjects] > 0) {
-            NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
+            @autoreleasepool {
 #if !FAST_DRAWING_ITERATION
             NSEnumerator* iter;
             DKDrawableObject* obj;
@@ -2278,7 +2277,7 @@ static void drawFunction3(const void* value, void* context)
 
             if (!drawSelected || [self drawsSelectionHighlightsOnTop]) {
 #if FAST_DRAWING_ITERATION
-                CFArrayApplyFunction((CFArrayRef)objectsToDraw, CFRangeMake(0, [objectsToDraw count]), drawFunction1, aView);
+                CFArrayApplyFunction((CFArrayRef)objectsToDraw, CFRangeMake(0, [objectsToDraw count]), drawFunction1, (__bridge void *)(aView));
 #else
                 iter = [objectsToDraw objectEnumerator];
 
@@ -2287,7 +2286,7 @@ static void drawFunction3(const void* value, void* context)
 #endif
             } else {
 #if FAST_DRAWING_ITERATION
-                CFArrayApplyFunction((CFArrayRef)objectsToDraw, CFRangeMake(0, [objectsToDraw count]), drawFunction3, self);
+                CFArrayApplyFunction((CFArrayRef)objectsToDraw, CFRangeMake(0, [objectsToDraw count]), drawFunction3, (__bridge void *)(self));
 #else
                 iter = [objectsToDraw objectEnumerator];
 
@@ -2300,7 +2299,7 @@ static void drawFunction3(const void* value, void* context)
 
             if ([self drawsSelectionHighlightsOnTop] && drawSelected) {
 #if FAST_DRAWING_ITERATION
-                CFArrayApplyFunction((CFArrayRef)objectsToDraw, CFRangeMake(0, [objectsToDraw count]), drawFunction2, self);
+                CFArrayApplyFunction((CFArrayRef)objectsToDraw, CFRangeMake(0, [objectsToDraw count]), drawFunction2, (__bridge void *)(self));
 #else
                 iter = [objectsToDraw objectEnumerator];
 
@@ -2309,9 +2308,7 @@ static void drawFunction3(const void* value, void* context)
                         [obj drawSelectedState];
                 }
 #endif
-            }
-
-            [pool drain];
+            } }
         }
 
         // draw any pending object
@@ -2570,7 +2567,7 @@ static void drawFunction3(const void* value, void* context)
             // yes, so pass the drag info to the target and let it get on with it
             //	LogEvent_(kReactiveEvent, @"passing drop to target = %@, availableType = %@", target, availableType );
 
-            wasHandled = [target performDragOperation:sender];
+            wasHandled = [(id <NSDraggingDestination>)target performDragOperation:sender];
         }
     }
 
@@ -2631,7 +2628,6 @@ static void drawFunction3(const void* value, void* context)
     
     
 
-    [super dealloc];
 }
 
 /** @brief Allows actions to be retargeted on single selected objects directly

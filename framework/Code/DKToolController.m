@@ -812,11 +812,6 @@ static DKDrawingTool* sGlobalTool = nil;
 
 /** @brief Deallocate the controller
  */
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 #pragma mark -
 #pragma mark As part of NSMenuValidation protocol

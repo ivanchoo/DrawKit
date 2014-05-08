@@ -41,14 +41,13 @@
 
     NSMutableArray* list = [NSMutableArray array];
 
-    Class* buffer = NULL;
+    //    Class* buffer = NULL; jmj
     Class cl;
 
     NSInteger i, numClasses = objc_getClassList(NULL, 0);
 
     if (numClasses > 0) {
-#warning 64BIT: Inspect use of sizeof
-        buffer = malloc(sizeof(Class) * numClasses);
+        Class buffer[numClasses];
 
         NSAssert(buffer != nil, @"couldn't allocate the buffer");
 
@@ -62,8 +61,6 @@
             if (classIsSubclassOfClass(cl, aClass))
                 [list addObject:cl];
         }
-
-        free(buffer);
     }
 
     // save in cache for next time
@@ -94,14 +91,12 @@
 
     NSMutableArray* list = [NSMutableArray array];
 
-    Class* buffer = NULL;
     Class cl;
 
     NSInteger i, numClasses = objc_getClassList(NULL, 0);
 
     if (numClasses > 0) {
-#warning 64BIT: Inspect use of sizeof
-        buffer = malloc(sizeof(Class) * numClasses);
+        Class buffer[numClasses];
 
         NSAssert(buffer != nil, @"couldn't allocate the buffer");
 
@@ -115,8 +110,6 @@
             if (classIsImmediateSubclassOfClass(aClass, cl))
                 [list addObject:cl];
         }
-
-        free(buffer);
     }
 
     // save in cache for next time

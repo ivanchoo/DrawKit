@@ -96,7 +96,7 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     RESTORE_GRAPHICS_CONTEXT //[NSGraphicsContext restoreGraphicsState];
         CGImageRef image = CGBitmapContextCreateImage([context graphicsPort]);
 
-    return (CGImageRef) (NSObject*) image;
+    return (__bridge CGImageRef) (__bridge NSObject*) image;
 }
 
 /** @brief Returns JPEG data for the drawing.
@@ -157,14 +157,14 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     CFMutableDataRef data = CFDataCreateMutable(kCFAllocatorDefault, 0);
     CGImageDestinationRef destRef = CGImageDestinationCreateWithData(data, kUTTypeJPEG, 1, NULL);
 
-    CGImageDestinationAddImage(destRef, image, (CFDictionaryRef)options);
+    CGImageDestinationAddImage(destRef, image, (__bridge CFDictionaryRef)options);
 
     BOOL result = CGImageDestinationFinalize(destRef);
 
     CFRelease(destRef);
 
     if (result)
-        return (NSData*)data;
+        return (__bridge NSData*)data;
     else {
         CFRelease(data);
         return nil;
@@ -255,14 +255,14 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     CFMutableDataRef data = CFDataCreateMutable(kCFAllocatorDefault, 0);
     CGImageDestinationRef destRef = CGImageDestinationCreateWithData(data, kUTTypeTIFF, 1, NULL);
 
-    CGImageDestinationAddImage(destRef, image, (CFDictionaryRef)options);
+    CGImageDestinationAddImage(destRef, image, (__bridge CFDictionaryRef)options);
 
     BOOL result = CGImageDestinationFinalize(destRef);
 
     CFRelease(destRef);
 
     if (result)
-        return (NSData*)data;
+        return (__bridge NSData*)data;
     else {
         CFRelease(data);
         return nil;
@@ -320,14 +320,14 @@ NSString* kDKExportedImageRelativeScale = @"kDKExportedImageRelativeScale";
     CFMutableDataRef data = CFDataCreateMutable(kCFAllocatorDefault, 0);
     CGImageDestinationRef destRef = CGImageDestinationCreateWithData(data, kUTTypePNG, 1, NULL);
 
-    CGImageDestinationAddImage(destRef, image, (CFDictionaryRef)options);
+    CGImageDestinationAddImage(destRef, image, (__bridge CFDictionaryRef)options);
 
     BOOL result = CGImageDestinationFinalize(destRef);
 
     CFRelease(destRef);
 
     if (result)
-        return (NSData*)data;
+        return (__bridge NSData*)data;
     else {
         CFRelease(data);
         return nil;

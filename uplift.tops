@@ -39,3 +39,11 @@ replace "return [<target> retain]" with "return <target>"
 
 replace "[<target> retain];" with ""
 
+
+/*
+Autorelease pools
+*/
+
+replace "NSAutoreleasePool* pool = [NSAutoreleasePool new];<a body>[pool drain];"
+	with "@autoreleasepool { <body> }"
+

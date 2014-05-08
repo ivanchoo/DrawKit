@@ -83,14 +83,6 @@
 
 #pragma mark -
 #pragma mark As an NSObject
-- (void)dealloc
-{
-    
-    
-    
-
-    [super dealloc];
-}
 
 - (id)init
 {
@@ -282,24 +274,23 @@
 
 - (void)drawAtPoint:(NSPoint)point fromRect:(NSRect)fromRect coreImageFilter:(NSString*)filterName arguments:(NSDictionary*)arguments
 {
-    NSAutoreleasePool* pool;
     NSBitmapImageRep* rep;
 
-    pool = [[NSAutoreleasePool alloc] init];
+    @autoreleasepool {
 
-    if (filterName) {
-        rep = [self bitmapImageRepresentation];
-        [rep drawAtPoint:point
-                   fromRect:fromRect
-            coreImageFilter:filterName
-                  arguments:arguments];
-    } else
-        [self drawAtPoint:point
-                 fromRect:fromRect
-                operation:NSCompositeSourceOver
-                 fraction:1.0f];
+        if (filterName) {
+            rep = [self bitmapImageRepresentation];
+            [rep drawAtPoint:point
+                       fromRect:fromRect
+                coreImageFilter:filterName
+                      arguments:arguments];
+        } else
+            [self drawAtPoint:point
+                     fromRect:fromRect
+                    operation:NSCompositeSourceOver
+                     fraction:1.0f];
 
-    
+    }
 }
 
 @end
@@ -309,13 +300,11 @@
 #pragma mark As an NSBitmapImageRep
 - (void)drawAtPoint:(NSPoint)point fromRect:(NSRect)fromRect coreImageFilter:(NSString*)filterName arguments:(NSDictionary*)arguments
 {
-    NSAutoreleasePool* pool;
     CIFilter* filter;
     CIImage* before;
     CIImage* after;
     CIContext* ciContext;
 
-    pool = [[NSAutoreleasePool alloc] init];
     before = nil;
 
     @try

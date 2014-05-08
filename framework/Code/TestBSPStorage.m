@@ -403,9 +403,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
     NSRect retrievalRect;
 
     for (i = 0; i < NUMBER_OF_RETRIEVAL_TESTS; ++i) {
-        NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-        l = randomFloat(0, canvasSize.width);
+        @autoreleasepool { l = randomFloat(0, canvasSize.width);
         t = randomFloat(0, canvasSize.height);
         w = randomFloat(0, canvasSize.width / 2);
         h = randomFloat(0, canvasSize.height / 2);
@@ -461,9 +459,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
 
             STAssertEqualObjects(bruteObject, tso, @"objects at index %d do not match - bf = %@, bsp = %@", j, bruteObject, tso);
             STAssertFalse([tso isMarked], @"retrieved object still has marked flag set, index = %d", j);
-        }
-
-        [pool drain];
+        } }
     }
 
     // a final retrieval test - if the retrieval rect is the whole canvas, number returned should equal entire object count
@@ -487,9 +483,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
     CGFloat t, l;
 
     for (i = 0; i < NUMBER_OF_RETRIEVAL_TESTS; ++i) {
-        NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-        l = randomFloat(0, canvasSize.width);
+        @autoreleasepool { l = randomFloat(0, canvasSize.width);
         t = randomFloat(0, canvasSize.height);
         NSPoint retrievalPoint = NSMakePoint(l, t);
 
@@ -537,9 +531,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
 
             STAssertEqualObjects(bruteObject, tso, @"objects at index %d do not match - bf = %@, bsp = %@", j, bruteObject, tso);
             STAssertFalse([tso isMarked], @"retrieved object still has marked flag set, index = %d", j);
-        }
-
-        [pool drain];
+        } }
     }
 
     
@@ -655,8 +647,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
     NSUInteger foundCount = 0;
 
     while ((tso = [iter nextObject])) {
-        NSAutoreleasePool* pool = [NSAutoreleasePool new];
-        NSEnumerator* leafEnum = [leaves objectEnumerator];
+        @autoreleasepool { NSEnumerator* leafEnum = [leaves objectEnumerator];
 
         while ((leafArray = [leafEnum nextObject])) {
             if ([leafArray containsObject:tso]) {
@@ -665,9 +656,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
             }
         }
         STAssertNotNil([tso storage], @"a storage back-pointer was nil (%@)", tso);
-        STAssertEqualObjects([tso storage], storage, @"a storage back-pointer wasn't pointing to the storage (%@)", tso);
-
-        [pool drain];
+        STAssertEqualObjects([tso storage], storage, @"a storage back-pointer wasn't pointing to the storage (%@)", tso); }
     }
 
     STAssertEquals(foundCount, [storage countOfObjects], @"number of objects in tree is not equal to number in linear storage, expected %d, got %d", [storage countOfObjects], foundCount);
@@ -679,9 +668,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
         NSUInteger linIndex = 0;
 
         while ((tso = [iter nextObject])) {
-            NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-            NSEnumerator* leafEnum = [leaves objectEnumerator];
+            @autoreleasepool { NSEnumerator* leafEnum = [leaves objectEnumerator];
             BOOL found = NO;
 
             while ((leafArray = [leafEnum nextObject])) {
@@ -689,9 +676,7 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
                     found = YES;
                     break;
                 }
-            }
-
-            [pool drain];
+            } }
 
             if (!found) {
 #warning 64BIT: Check formatting arguments
@@ -710,17 +695,13 @@ static NSUInteger randomUnsigned(NSUInteger minVal, NSUInteger maxVal)
 
     iter = [leaves objectEnumerator];
     while ((leafArray = [iter nextObject])) {
-        NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-        NSEnumerator* leafIter = [leafArray objectEnumerator];
+        @autoreleasepool { NSEnumerator* leafIter = [leafArray objectEnumerator];
         while ((tso = [leafIter nextObject])) {
             STAssertTrue([[storage objects] containsObject:tso], @"an object was present in the tree but not in the linear array: %@ (leaf index = %d)", tso, foundCount);
             STAssertNotNil([tso storage], @"a storage back-pointer was nil (%@)", tso);
             STAssertEquals([tso storage], storage, @"a storage back-pointer wasn't pointing to the storage");
         }
-        ++foundCount;
-
-        [pool drain];
+        ++foundCount; }
     }
 }
 

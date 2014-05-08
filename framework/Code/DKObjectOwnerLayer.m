@@ -1899,7 +1899,6 @@ static DKLayerCacheOption sDefaultCacheOption = kDKLayerCacheNone;
                                     withObject:nil];
 
     
-    [super dealloc];
 }
 
 - (id)init

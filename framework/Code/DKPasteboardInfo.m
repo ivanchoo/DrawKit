@@ -73,7 +73,7 @@
                        forKey:classname];
 
             if (mOriginatingLayerKey == nil)
-                mOriginatingLayerKey = [[obj layer] uniqueKey];
+                mOriginatingLayerKey = [(DKLayer*)[obj layer] uniqueKey];
         }
 
         mClassInfo = [clDict copy];
@@ -147,11 +147,5 @@
                  forKey:@"DKPasteboardInfo_originatingLayerKey"];
 }
 
-- (void)dealloc
-{
-    
-    
-    [super dealloc];
-}
 
 @end

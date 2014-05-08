@@ -1667,7 +1667,6 @@ static CGFloat s_maximumVerticalOffset = DEFAULT_BASELINE_OFFSET_MAX;
     
     
     
-    [super dealloc];
 }
 
 - (id)init

@@ -275,11 +275,5 @@ static NSMutableDictionary* s_handleInstancesTable = nil;
 #pragma mark -
 #pragma mark - as a NSObject
 
-- (void)dealloc
-{
-    
-    
-    [super dealloc];
-}
 
 @end

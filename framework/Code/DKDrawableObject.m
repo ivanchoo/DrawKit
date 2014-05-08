@@ -731,8 +731,6 @@ static NSDictionary* s_interconversionTable = nil;
  */
 - (void)drawContentWithSelectedState:(BOOL)selected
 {
-    NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
 #ifdef qIncludeGraphicDebugging
     [NSGraphicsContext saveGraphicsState];
 
@@ -775,8 +773,6 @@ static NSDictionary* s_interconversionTable = nil;
     }
 
 #endif
-
-    [pool drain];
 }
 
 - (void)drawContent
@@ -2312,7 +2308,6 @@ static NSRect s_oldBounds;
     }
     
     
-    [super dealloc];
 }
 
 - (id)init

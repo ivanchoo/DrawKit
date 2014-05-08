@@ -241,13 +241,6 @@ NSString* kDKImageDataManagerPasteboardType = @"net.apptree.drawkit.imgdatamgrty
     return self;
 }
 
-- (void)dealloc
-{
-    
-    
-    
-    [super dealloc];
-}
 
 - (void)encodeWithCoder:(NSCoder*)coder
 {

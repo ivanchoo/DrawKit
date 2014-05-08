@@ -300,7 +300,7 @@ static inline NSUInteger childNodeAtIndex(NSUInteger nodeIndex)
 {
     // this method is here solely to support backward compatibility with b5; storage is no longer archived.
 
-    [super initWithCoder:aCoder];
+    if (!(self = [super initWithCoder:aCoder])) return nil;
     mTreeDepth = [aCoder decodeIntegerForKey:@"DKBSPObjectStorage_treeDepth"];
     [self setCanvasSize:[aCoder decodeSizeForKey:@"DKBSPObjectStorage_canvasSize"]];
 
@@ -310,11 +310,6 @@ static inline NSUInteger childNodeAtIndex(NSUInteger nodeIndex)
 #pragma mark -
 #pragma mark - as a NSObject
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 @end
 
@@ -772,15 +767,6 @@ static NSUInteger sLeafCount = 0;
 #pragma mark -
 #pragma mark - as a NSObject
 
-- (void)dealloc
-{
-    
-    
-    
-    
-
-    [super dealloc];
-}
 
 - (NSString*)description
 {

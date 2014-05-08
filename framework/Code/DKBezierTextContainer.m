@@ -48,10 +48,5 @@
                                         remainingRect:remainingRect];
 }
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 @end

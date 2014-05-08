@@ -165,7 +165,7 @@ NSString* kDKOriginalNameMetadataKey = @"dk_original_name";
  */
 - (id)initWithImageNamed:(NSString*)imageName
 {
-    [self initWithImage:[NSImage imageNamed:imageName]];
+    if (!(self = [self initWithImage:[NSImage imageNamed:imageName]])) return nil;
     [self setString:imageName
              forKey:kDKOriginalNameMetadataKey];
 
@@ -943,13 +943,6 @@ NSString* kDKOriginalNameMetadataKey = @"dk_original_name";
 
 /** @brief Deallocates the object
  */
-- (void)dealloc
-{
-    
-    
-    
-    [super dealloc];
-}
 
 #pragma mark -
 #pragma mark As part of the DKHotspotDelegate protocol

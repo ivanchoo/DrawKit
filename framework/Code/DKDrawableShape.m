@@ -1913,9 +1913,7 @@ static NSSize sTempSavedOffset;
  */
 - (void)drawSelectedState
 {
-    NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-    if (m_inRotateOp) {
+    @autoreleasepool { if (m_inRotateOp) {
         [[[self layer] knobs] drawRotationBarWithKnobsFromCentre:[self knobPoint:kDKDrawableShapeOriginTarget]
                                                          toPoint:sTempRotationPt];
 
@@ -1960,9 +1958,7 @@ static NSSize sTempSavedOffset;
                 [self drawHotspotsInState:kDKHotspotStateOn];
             }
         }
-    }
-
-    [pool drain];
+    } }
 }
 
 /** @brief Hit test the point against the object
@@ -2583,14 +2579,6 @@ static NSSize sTempSavedOffset;
 
 #pragma mark -
 #pragma mark As an NSObject
-- (void)dealloc
-{
-    
-    
-    
-
-    [super dealloc];
-}
 
 #pragma mark -
 #pragma mark As part of NSCoding Protocol

@@ -502,7 +502,6 @@
     
     [self invalidateCache];
 
-    [super dealloc];
 }
 
 - (id)init

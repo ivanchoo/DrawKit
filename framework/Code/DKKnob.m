@@ -493,15 +493,6 @@ static NSSize sKnobSize = { 6.0, 6.0 };
     return self;
 }
 
-- (void)dealloc
-{
-    
-    
-    
-    
-    
-    [super dealloc];
-}
 
 - (id)initWithCoder:(NSCoder*)coder
 {

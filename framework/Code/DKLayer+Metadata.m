@@ -8,6 +8,7 @@
 
 #import "DKLayer+Metadata.h"
 #import "LogEvent.h"
+#import "DKLayerGroup.h"
 
 #define USE_107_OR_LATER_SCHEMA 1
 

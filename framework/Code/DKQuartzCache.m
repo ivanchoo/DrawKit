@@ -153,7 +153,6 @@
         [self unlockFocus];
 
     CGLayerRelease(mCGLayer);
-    [super dealloc];
 }
 
 @end

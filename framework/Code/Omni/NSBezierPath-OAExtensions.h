@@ -137,7 +137,8 @@ void				splitBezierCurveTo(const NSPoint *c, CGFloat t, NSPoint *l, NSPoint *r);
 
 typedef struct
 {
-    NSBezierPath *pathBeingWalked;      // The NSBezierPath we're iterating through
+// jmj    NSBezierPath *pathBeingWalked;      // The NSBezierPath we're iterating through
+    __unsafe_unretained NSBezierPath *pathBeingWalked;      // The NSBezierPath we're iterating through
     NSInteger elementCount;                   // [pathBeingWalked elementCount]
     NSPoint startPoint;                 // first point of this subpath, for closepath
     NSBezierPathElement what;           // the type of the current segment/element

@@ -1490,16 +1490,6 @@ static id sDearchivingHelper = nil;
 
 #pragma mark -
 #pragma mark As an NSObject
-- (void)dealloc
-{
-    
-    
-    
-    
-    
-
-    [super dealloc];
-}
 
 - (id)init
 {
@@ -2304,11 +2294,6 @@ static id sDearchivingHelper = nil;
     return theMenu;
 }
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 #pragma mark -
 

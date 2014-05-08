@@ -41,7 +41,8 @@
         while (glyphIndex < glyphRange.length) {
             // look at the formatting applied to individual glyphs so that the path applies that formatting as necessary.
 
-            NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+
+            @autoreleasepool {
 
             NSUInteger g;
             NSPoint gloc, ploc;
@@ -80,7 +81,7 @@
             }
             // next line:
             glyphIndex += grange.length;
-            [pool drain];
+            }
         }
     }
 
@@ -145,10 +146,5 @@
     return self;
 }
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 @end

@@ -397,10 +397,5 @@ static DKToolRegistry* s_toolRegistry = nil;
     return self;
 }
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 @end

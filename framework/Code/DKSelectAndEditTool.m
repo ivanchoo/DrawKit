@@ -16,6 +16,7 @@
 #import "LogEvent.h"
 #import "NSAffineTransform+DKAdditions.h"
 #import "DKUndoManager.h"
+#import "DKToolController.h"
 
 @interface DKSelectAndEditTool (Private)
 
@@ -321,6 +322,7 @@ NSString* kDKSelectionToolTargetObject = @"kDKSelectionToolTargetObject";
 
 // if this is set, CFArrayApplyFunction is used to update the objects rather than an enumerator
 
+/* jmj
 #define USE_CF_APPLIER_FOR_DRAGGING 1
 
 typedef struct
@@ -399,6 +401,7 @@ static void dragFunction_mouseUp(const void* obj, void* context)
         [[(DKDrawableObject*)obj class] setDisplaysSizeInfoWhenDragging:saveShowsInfo];
     }
 }
+*/
 
 /** @brief Handle the drag of objects, either singly or multiply
 
@@ -774,7 +777,7 @@ static void dragFunction_mouseUp(const void* obj, void* context)
     default:
         break;
 
-    case kDKEditToolSelectionMode:
+    case kDKEditToolSelectionMode: {
         [self setMarqueeRect:NSRectFromTwoPoints(mAnchorPoint, mLastPoint)
                      inLayer:odl];
 
@@ -815,6 +818,7 @@ static void dragFunction_mouseUp(const void* obj, void* context)
                                                           userInfo:userInfoDict];
         break;
 
+    }
     case kDKEditToolMoveObjectsMode:
         sel = [self draggedObjects];
 
@@ -1051,11 +1055,7 @@ static void dragFunction_mouseUp(const void* obj, void* context)
     DKObjectDrawingLayer* odl = (DKObjectDrawingLayer*)layer;
     NSArray* sel;
     DKDrawableObject* obj;
-    NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-    // the mouse has actually been dragged, so flag that
-
-    mMouseMoved = YES;
+    @autoreleasepool { mMouseMoved = YES;
     mLastPoint = p;
 
     // depending on the mode, carry out the operation for a mousedragged event
@@ -1109,9 +1109,7 @@ static void dragFunction_mouseUp(const void* obj, void* context)
     {
 #warning 64BIT: Inspect use of long
         NSLog(@"#### exception while dragging with selection tool: mode = %ld, exc = (%@) - ignored ####", (long)[self operationMode], exception);
-    }
-
-    [pool drain];
+    } }
 }
 
 /** @brief Handle the mouse up event
@@ -1333,12 +1331,5 @@ static void dragFunction_mouseUp(const void* obj, void* context)
 
 /** @brief Deallocate the tool
  */
-- (void)dealloc
-{
-    
-    
-    
-    [super dealloc];
-}
 
 @end

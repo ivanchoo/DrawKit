@@ -98,7 +98,6 @@
 - (void)dealloc
 {
     [mTimer invalidate];
-    [super dealloc];
 }
 
 @end

@@ -1308,7 +1308,6 @@ static NSArray* s_selectionColours = nil;
     
     
     
-    [super dealloc];
 }
 
 /** @brief Designated initializer for base class of all layers

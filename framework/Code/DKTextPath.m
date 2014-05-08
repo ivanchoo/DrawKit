@@ -1039,7 +1039,6 @@ static NSString* sDefault_string = @"Double-click to edit this text";
 {
     [self endEditing];
     [self setTextAdornment:nil];
-    [super dealloc];
 }
 
 - (void)observeValueForKeyPath:(NSString*)keypath ofObject:(id)object change:(NSDictionary*)change context:(void*)context

@@ -77,10 +77,5 @@ static DKAuxiliaryMenus* sAuxMenus = nil;
     return self;
 }
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 @end

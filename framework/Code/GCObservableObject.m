@@ -236,11 +236,6 @@ static NSMutableDictionary* sActionNameRegistry = nil;
 
 #pragma mark -
 #pragma mark As an NSObject
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 - (id)init
 {

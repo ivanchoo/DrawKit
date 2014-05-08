@@ -40,7 +40,7 @@
 
 - (id)initWithTimeInterval:(NSTimeInterval)t forDelegate:(id)del
 {
-    [super init];
+    if (!(self = [super init])) return nil;
     [self setDelegate:del];
 
     mTotal = t;
@@ -64,7 +64,6 @@
 {
     [mTimer invalidate];
     
-    [super dealloc];
 }
 
 - (void)setDelegate:(id)del

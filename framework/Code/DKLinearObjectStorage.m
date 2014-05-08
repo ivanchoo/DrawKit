@@ -238,7 +238,6 @@
     [[self objects] makeObjectsPerformSelector:@selector(setStorage:)
                                     withObject:nil];
     
-    [super dealloc];
 }
 
 @end

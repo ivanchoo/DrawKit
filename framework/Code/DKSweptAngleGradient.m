@@ -247,7 +247,6 @@
 - (void)dealloc
 {
     [self invalidateCache];
-    [super dealloc];
 }
 
 @end

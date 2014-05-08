@@ -11,6 +11,7 @@
 #import "DKDrawing.h"
 #import "DKKnob.h"
 #import "LogEvent.h"
+#import "DKObjectOwnerLayer.h"
 
 @implementation DKDrawableShape (Hotspots)
 #pragma mark As a DKDrawableShape

@@ -1619,7 +1619,7 @@ static void InterpolatePoints(const NSPoint* v, NSPoint* cp1, NSPoint* cp2, cons
     NSAssert(path != nil, @"CG path was nil in bezierPathWithCGPath");
 
     NSBezierPath* newPath = [self bezierPath];
-    CGPathApply(path, newPath, ConvertPathApplierFunction);
+    CGPathApply(path, (__bridge void *)(newPath), ConvertPathApplierFunction);
     return newPath;
 }
 
@@ -1819,7 +1819,7 @@ static void InterpolatePoints(const NSPoint* v, NSPoint* cp1, NSPoint* cp2, cons
 
 static void ConvertPathApplierFunction(void* info, const CGPathElement* element)
 {
-    NSBezierPath* np = (NSBezierPath*)info;
+    NSBezierPath* np = (__bridge NSBezierPath*)info;
 
     switch (element->type) {
     case kCGPathElementMoveToPoint:

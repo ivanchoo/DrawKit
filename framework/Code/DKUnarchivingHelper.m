@@ -145,11 +145,6 @@ NSString* kDKUnarchiverProgressFinishedNotification = @"kDKUnarchiverProgressFin
     return mLastClassnameSubstituted;
 }
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 @end
 
@@ -186,11 +181,6 @@ NSString* kDKUnarchiverProgressFinishedNotification = @"kDKUnarchiverProgressFin
 #pragma unused(coder)
 }
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 - (NSString*)description
 {

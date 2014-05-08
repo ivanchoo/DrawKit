@@ -892,7 +892,6 @@
     
     
     
-    [super dealloc];
 }
 
 - (NSMethodSignature*)methodSignatureForSelector:(SEL)aSelector
@@ -1095,14 +1094,6 @@
     return self;
 }
 
-- (void)dealloc
-{
-    //NSLog(@"deallocating undo group %@", self );
-
-    
-    
-    [super dealloc];
-}
 
 - (NSString*)description
 {
@@ -1152,7 +1143,7 @@
     // don't set the argument if the selector doesn't take one
 
     if ([sig numberOfArguments] >= 3)
-        [inv setArgument:&object
+        [inv setArgument:(__bridge void *)(object) // jmj &object
                  atIndex:2];
 
     self = [self initWithInvocation:inv];
@@ -1212,15 +1203,6 @@
     return nil;
 }
 
-- (void)dealloc
-{
-    
-
-    if (mTargetRetained)
-        
-
-    [super dealloc];
-}
 
 - (NSString*)description
 {

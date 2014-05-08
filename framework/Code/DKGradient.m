@@ -1010,7 +1010,6 @@ static NSInteger cmpColorStops(DKColorStop* lh, DKColorStop* rh, void* context)
     
     CGFunctionRelease(m_cbfunc);
     
-    [super dealloc];
 }
 
 - (id)init
@@ -1228,11 +1227,6 @@ static NSInteger cmpColorStops(DKColorStop* lh, DKColorStop* rh, void* context)
 
 #pragma mark -
 #pragma mark As an NSObject
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 #pragma mark -
 #pragma mark As part of GraphicsAttributes Protocol
@@ -1313,7 +1307,7 @@ static void shaderCallback(void* info, const CGFloat* in, CGFloat* out)
         sfunc = (void (*)(id, SEL, CGFloat, CGFloat*, BOOL))[DKGradient instanceMethodForSelector : ssel];
     }
 
-    sfunc(info, ssel, *in, out, NO);
+    sfunc((__bridge id)(info), ssel, *in, out, NO);
 #else
     [(DKGradient*)info private_colorAtValue:*in
                                  components:out

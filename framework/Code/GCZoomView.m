@@ -452,11 +452,6 @@ NSString* kDKDrawingScrollwheelSensePrefsKey = @"kDKDrawingcrollwheelSense"; // 
     return self;
 }
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 #pragma mark -
 #pragma mark As part of NSMenuValidation protocol

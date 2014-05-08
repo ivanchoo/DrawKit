@@ -2148,9 +2148,8 @@ finish:
 {
     // stroke the path using the standard selection
 
-    NSAutoreleasePool* pool = [NSAutoreleasePool new];
-
-    NSBezierPath* path = [self renderingPath];
+    @autoreleasepool {
+        NSBezierPath* path = [self renderingPath];
 
     [self drawSelectionPath:path];
     [self drawControlPointsOfPath:path
@@ -2161,8 +2160,7 @@ finish:
         [[self path] drawElementsBoundingBoxes];
 
 #endif
-
-    [pool drain];
+    }
 }
 
 /** @brief Draw the ghosted content of the object
@@ -2610,12 +2608,6 @@ finish:
 
 #pragma mark -
 #pragma mark As an NSObject
-- (void)dealloc
-{
-    
-    
-    [super dealloc];
-}
 
 - (id)init
 {

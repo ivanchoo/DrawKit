@@ -11,6 +11,8 @@
 #import "DKDrawingView.h"
 #import "DKGuideLayer.h"
 #import "LogEvent.h"
+#import "DKGridLayer.h"
+
 
 #pragma mark Static Vars
 
@@ -809,7 +811,6 @@ static NSTimer* s_autoscrollTimer = nil;
     }
 
     mDrawingRef = nil;
-    [super dealloc];
 }
 
 /** @brief Forward an invocation to the active layer if it implements it

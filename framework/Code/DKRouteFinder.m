@@ -244,7 +244,6 @@ static DKRouteAlgorithmType s_Algorithm = kDKUseNearestNeighbour; //kDKUseSimula
     if (mOrder)
         free(mOrder);
 
-    [super dealloc];
 }
 
 - (void)notifyProgress:(CGFloat)value
@@ -413,7 +412,7 @@ static DKRouteAlgorithmType s_Algorithm = kDKUseNearestNeighbour; //kDKUseSimula
         mCalculationDone = YES;
 
         if ((mAlgorithm & kDKUseSimulatedAnnealing) != 0) {
-            anneal(mX, mY, mOrder, [mInput count], mAnnealingSteps, self);
+            anneal(mX, mY, mOrder, [mInput count], mAnnealingSteps, (__bridge const void *)(self));
             mPathLength = [self pathLengthOfArray:[self shortestRoute]];
         }
 
@@ -428,7 +427,7 @@ static DKRouteAlgorithmType s_Algorithm = kDKUseNearestNeighbour; //kDKUseSimula
 
 void progressCallback(CGFloat iteration, CGFloat maxIterations, const void* context)
 {
-    DKRouteFinder* rf = (DKRouteFinder*)context;
+    DKRouteFinder* rf = (__bridge DKRouteFinder*)context;
 
     if (rf != nil)
         [rf notifyProgress:iteration / maxIterations];

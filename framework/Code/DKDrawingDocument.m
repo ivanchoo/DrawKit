@@ -580,8 +580,8 @@ static NSMutableDictionary* sFileExportBindings = nil;
 {
     LogEvent_(kLifeEvent, @"initialising default drawing, type = '%@'", typeName);
 
-    [super initWithType:typeName
-                  error:outError];
+    if (!(self = [super initWithType:typeName
+                  error:outError])) return nil;
 
     // create a default drawing. Note that the fileType is ignored. It creates the default drawing regardless of type - if
     // your document needs to be sensitive to the type, override this.
@@ -755,7 +755,6 @@ static NSMutableDictionary* sFileExportBindings = nil;
     [[self drawing] setUndoManager:nil];
     [m_drawing setOwner:nil];
     
-    [super dealloc];
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem*)item

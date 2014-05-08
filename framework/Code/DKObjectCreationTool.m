@@ -265,11 +265,6 @@ static DKStyle* sCreatedObjectsStyle = nil;
 
 /** @brief Deallocate the tool
  */
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 #pragma mark -
 #pragma mark - As a DKDrawingTool

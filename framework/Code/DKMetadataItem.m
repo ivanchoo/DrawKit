@@ -967,11 +967,6 @@ NSString* DKMultipleMetadataItemsPBoardType = @"com.apptree.dk.multimeta";
     return [self initWithString:@""];
 }
 
-- (void)dealloc
-{
-    
-    [super dealloc];
-}
 
 - (id)copyWithZone:(NSZone*)zone
 {

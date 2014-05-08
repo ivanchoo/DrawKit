@@ -14,6 +14,7 @@
 #import "DKObjectDrawingLayer.h"
 #import "LogEvent.h"
 #import "DKDrawkitMacros.h"
+#import "DKShapeGroup.h"
 #include <tgmath.h>
 
 @interface DKRegularPolygonPath (Private)
@@ -842,7 +843,7 @@ static CGFloat sAngleConstraint = 0.261799387799; // 15°
  */
 - (id)initWithCoder:(NSCoder*)coder
 {
-    [super initWithCoder:coder];
+    if (!(self = [super initWithCoder:coder])) return nil;
     [self setRadius:[coder decodeDoubleForKey:@"DKRegularPoly_outerRadius"]];
     [self setInnerRadius:[coder decodeDoubleForKey:@"DKRegularPoly_innerRadius"]];
     [self setTipSpread:[coder decodeDoubleForKey:@"DKRegularPoly_tipSpread"]];

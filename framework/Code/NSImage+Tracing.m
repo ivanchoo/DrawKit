@@ -631,7 +631,6 @@ NSString* kDKTracingParam_opttolerance = @"kDKTracingParam_opttolerance";
         bm_free(mBits);
     }
 
-    [super dealloc];
 }
 
 @end

@@ -1063,13 +1063,6 @@ static BOOL sWasInside = NO;
 
 /** @brief Deallocates the guide layer
  */
-- (void)dealloc
-{
-    
-    
-
-    [super dealloc];
-}
 
 /** @brief Initializes the guide layer
 

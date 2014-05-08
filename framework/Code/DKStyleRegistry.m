@@ -31,7 +31,7 @@ NSString* kDKStyleWasEditedWhileRegisteredNotification = @"kDKStyleWasEditedWhil
 
 static NSInteger SortKeysByReferredName(id a, id b, void* contextInfo)
 {
-    DKStyleRegistry* reg = (DKStyleRegistry*)contextInfo;
+    DKStyleRegistry* reg = (__bridge DKStyleRegistry*)contextInfo;
 
     // a and b are keys in the registry - order them by the name of the styles they reference
 
@@ -957,7 +957,7 @@ static BOOL s_NoDKDefaults = NO;
 
     NSArray* keys = [self allKeysInCategory:catName];
     return [keys sortedArrayUsingFunction:SortKeysByReferredName
-                                  context:self];
+                                  context:(__bridge void *)(self)];
 }
 
 /** @brief Return all of the names in a given category, sorted into some useful order
@@ -1029,7 +1029,6 @@ static BOOL s_NoDKDefaults = NO;
 - (void)dealloc
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    [super dealloc];
 }
 
 @end
